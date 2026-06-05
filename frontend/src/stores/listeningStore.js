@@ -7,8 +7,8 @@ function createSubtitleItem(event) {
     id: targetSegmentId,
     eventId: event.segmentId,
     time: event.time,
-    source: event.sourceText,
-    translation: event.translatedText,
+    source: event.sourceText || '',
+    translation: event.translatedText || '',
     offsetMs: event.offsetMs,
     status: event.status,
     type: event.type,
@@ -37,7 +37,16 @@ export const useListeningStore = create((set) => ({
       const subtitleItems =
         itemIndex === -1
           ? [...state.subtitleItems, nextItem]
-          : state.subtitleItems.map((item, index) => (index === itemIndex ? nextItem : item));
+          : state.subtitleItems.map((item, index) => (
+              index === itemIndex
+                ? {
+                    ...item,
+                    ...nextItem,
+                    source: nextItem.source || item.source,
+                    translation: nextItem.translation || item.translation
+                  }
+                : item
+            ));
 
       return {
         subtitleItems,

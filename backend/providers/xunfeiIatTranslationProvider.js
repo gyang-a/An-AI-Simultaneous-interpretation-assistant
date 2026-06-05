@@ -1,6 +1,5 @@
 import { WebSocket } from 'ws';
 import { getXunfeiIatConfig } from '../config/xunfeiIatConfig.js';
-import { getTranslationProviderConfig } from '../config/translationProviderConfig.js';
 import { translateText } from './translationProvider.js';
 import { createXunfeiIatAuthUrl } from './xunfeiIatAuth.js';
 
@@ -75,7 +74,6 @@ function splitLeadingPunctuation(text) {
 
 export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) {
   const config = getXunfeiIatConfig();
-  const translationConfig = getTranslationProviderConfig();
   let iatSocket = null;
   let startedAt = 0;
   let hasSentFirstFrame = false;
@@ -330,24 +328,6 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     });
   }
 
-  function getTranslationContext(segmentId) {
-    return getVisibleSegmentIds()
-      .filter((visibleSegmentId) => visibleSegmentId !== segmentId)
-      .slice(-translationConfig.contextSegments)
-      .map((visibleSegmentId) => {
-        const sourceText = getSegmentText(visibleSegmentId);
-        const translatedSegment = translatedSegments.get(visibleSegmentId);
-
-        return {
-          sourceText,
-          translatedText:
-            translatedSegment?.sourceText === sourceText
-              ? translatedSegment.translatedText
-              : ''
-        };
-      });
-  }
-
   async function translateSegment({ segmentId, sourceText, offsetMs }) {
     const currentTranslation = translatedSegments.get(segmentId);
     if (currentTranslation?.sourceText === sourceText) {
@@ -364,8 +344,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
 
     try {
       const translatedText = await translateText({
-        text: sourceText,
-        context: getTranslationContext(segmentId)
+        text: sourceText
       });
 
       if (translationVersions.get(segmentId) !== nextVersion) {

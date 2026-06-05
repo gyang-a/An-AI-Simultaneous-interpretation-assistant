@@ -15,7 +15,7 @@ function getSubtitleSocketUrl() {
 function parseSubtitleEvent(message) {
   const event = JSON.parse(message.data);
 
-  if (!event.type || !event.segmentId || !event.sourceText || !event.translatedText) {
+  if (!event.type || !event.segmentId || !event.sourceText) {
     throw new Error('Invalid subtitle event payload');
   }
 

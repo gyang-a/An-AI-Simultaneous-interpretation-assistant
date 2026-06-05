@@ -7,7 +7,6 @@ const requiredTextFields = [
   'offsetMs',
   'time',
   'sourceText',
-  'translatedText',
   'status'
 ];
 
@@ -25,6 +24,10 @@ export function normalizeSubtitleEvent(event) {
   }
 
   assertRequiredFields(event);
+
+  if (!('translatedText' in event)) {
+    event.translatedText = '';
+  }
 
   if (event.type === SUBTITLE_EVENT_TYPES.REVISION) {
     if (!event.revisionReason) {
