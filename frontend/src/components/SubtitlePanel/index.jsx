@@ -32,13 +32,6 @@ function SubtitlePanel({ items, isListening }) {
             翻译记录
           </button>
         </div>
-
-        <div className="auto-revision">
-          <span>AI自动修正</span>
-          <span className="toggle-on" aria-hidden="true">
-            <i />
-          </span>
-        </div>
       </div>
 
       {hasItems ? (
@@ -84,10 +77,6 @@ function SubtitlePanel({ items, isListening }) {
           {isListening ? '正在等待第一条字幕...' : '点击开始监听后，实时字幕会显示在这里。'}
         </div>
       )}
-
-      <button className="show-more" type="button">
-        显示更多
-      </button>
     </section>
   );
 }
