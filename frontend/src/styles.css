@@ -124,7 +124,39 @@ button {
   border-radius: 8px;
   color: #c4ccff;
   background: rgba(124, 92, 255, 0.18);
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  width: 100%;
+  margin-top: auto;
+  padding: 0 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  color: #aeb9cc;
+  background: rgba(8, 14, 28, 0.68);
+  text-align: left;
+  font-weight: 650;
+}
+
+.theme-icon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  color: #cbd5e1;
+  font-size: 20px;
+}
+
+.theme-chevron {
+  margin-left: auto;
+  color: #8b96a8;
 }
 
 .workspace {

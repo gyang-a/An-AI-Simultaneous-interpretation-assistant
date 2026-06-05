@@ -1,4 +1,11 @@
-const navItems = ['实时翻译', '导入翻译', '历史记录', '术语库', '字幕记录', '设置'];
+const navItems = [
+  { label: '实时翻译', icon: '◆' },
+  { label: '导入翻译', icon: '⇩' },
+  { label: '历史记录', icon: '◷' },
+  { label: '术语库', icon: '▤' },
+  { label: '字幕记录', icon: 'CC' },
+  { label: '设置', icon: '⚙' }
+];
 
 function Sidebar() {
   return (
@@ -18,15 +25,25 @@ function Sidebar() {
           <button
             className={index === 0 ? 'nav-item active' : 'nav-item'}
             type="button"
-            key={item}
+            key={item.label}
           >
             <span className="nav-icon" aria-hidden="true">
-              {index + 1}
+              {item.icon}
             </span>
-            {item}
+            {item.label}
           </button>
         ))}
       </nav>
+
+      <button className="theme-toggle" type="button">
+        <span className="theme-icon" aria-hidden="true">
+          ◐
+        </span>
+        深色模式
+        <span className="theme-chevron" aria-hidden="true">
+          ˅
+        </span>
+      </button>
     </aside>
   );
 }
