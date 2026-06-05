@@ -1,7 +1,15 @@
+import { useEffect, useRef } from 'react';
 import './SubtitlePanel.less';
 
 function SubtitlePanel({ items, isListening }) {
   const hasItems = items.length > 0;
+  const listRef = useRef(null);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [items]);
 
   return (
     <section className="subtitle-panel" aria-labelledby="subtitle-title">
@@ -24,7 +32,7 @@ function SubtitlePanel({ items, isListening }) {
       </div>
 
       {hasItems ? (
-        <ol className="subtitle-list">
+        <ol className="subtitle-list" ref={listRef}>
           {items.map((item, index) => {
             const isActive = index === items.length - 1;
             const isRevised = item.type === 'revision';

@@ -8,15 +8,17 @@ const IAT_FRAME_STATUS = {
   LAST: 2
 };
 
-function createSubtitleEvent({ segmentId, offsetMs, text, isFinal }) {
+function createSubtitleEvent({ segmentId, revisionOf, offsetMs, text, isFinal, isRevision }) {
   return {
-    type: isFinal ? 'final' : 'partial',
+    type: isRevision ? 'revision' : isFinal ? 'final' : 'partial',
     segmentId,
+    revisionOf,
     offsetMs,
     time: formatTime(offsetMs),
     sourceText: text,
     translatedText: text,
-    status: isFinal ? '已识别' : '识别中'
+    status: isRevision ? '已修正' : isFinal ? '已识别' : '识别中',
+    revisionReason: isRevision ? '讯飞动态修正返回了更准确的识别结果。' : undefined
   };
 }
 
@@ -42,6 +44,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   let hasSentFirstFrame = false;
   let pendingAudioChunks = [];
   let segmentIndex = 0;
+  let activeSegmentId = '';
 
   function assertConfig() {
     if (!config.appId || !config.apiKey || !config.apiSecret) {
@@ -113,15 +116,26 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
       return;
     }
 
-    segmentIndex += 1;
+    const isRevision = payload.data?.result?.pgs === 'rpl';
+    if (!activeSegmentId) {
+      segmentIndex += 1;
+      activeSegmentId = `xfyun-${segmentIndex}`;
+    }
+
     onSubtitleEvent(
       createSubtitleEvent({
-        segmentId: `xfyun-${segmentIndex}`,
+        segmentId: activeSegmentId,
+        revisionOf: isRevision ? activeSegmentId : undefined,
         offsetMs: Date.now() - startedAt,
         text,
-        isFinal: payload.data?.status === 2
+        isFinal: payload.data?.status === 2,
+        isRevision
       })
     );
+
+    if (payload.data?.status === 2) {
+      activeSegmentId = '';
+    }
   }
 
   function start() {
@@ -131,6 +145,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     hasSentFirstFrame = false;
     pendingAudioChunks = [];
     segmentIndex = 0;
+    activeSegmentId = '';
 
     iatSocket = new WebSocket(
       createXunfeiIatAuthUrl(config.url, config.apiKey, config.apiSecret)
