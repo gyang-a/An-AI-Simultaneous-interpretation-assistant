@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
 import QuickActionsPanel from './components/QuickActionsPanel';
@@ -7,6 +8,8 @@ import SubtitlePanel from './components/SubtitlePanel';
 import Topbar from './components/Topbar';
 
 function App() {
+  const [isListening, setIsListening] = useState(false);
+
   return (
     <main className="app-shell">
       <Sidebar />
@@ -15,7 +18,11 @@ function App() {
         <Topbar />
         <div className="workspace-grid">
           <div className="main-column">
-            <ListeningPanel />
+            <ListeningPanel
+              isListening={isListening}
+              onStartListening={() => setIsListening(true)}
+              onStopListening={() => setIsListening(false)}
+            />
             <SubtitlePanel />
           </div>
           <div className="side-column">

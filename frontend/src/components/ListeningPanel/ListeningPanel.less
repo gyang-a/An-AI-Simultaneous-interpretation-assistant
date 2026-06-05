@@ -24,6 +24,10 @@
   font-weight: 750;
 }
 
+.mode-tab:disabled {
+  cursor: default;
+}
+
 .mode-tab.active {
   color: #8ea0ff;
   border-color: rgba(124, 92, 255, 0.8);
@@ -42,6 +46,10 @@
     radial-gradient(circle at 50% 46%, rgba(92, 91, 255, 0.18), transparent 28%),
     rgba(8, 14, 28, 0.72);
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.2);
+}
+
+.listening-card.active {
+  border-color: rgba(124, 92, 255, 0.35);
 }
 
 .listening-copy {
@@ -66,6 +74,10 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  background: #64748b;
+}
+
+.status-dot.active {
   background: #26d48c;
 }
 
@@ -99,6 +111,14 @@
     0 0 0 20px rgba(90, 99, 255, 0.12),
     0 0 0 38px rgba(90, 99, 255, 0.05);
   font-size: 38px;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.mic-orb.active {
+  box-shadow:
+    0 0 0 20px rgba(90, 99, 255, 0.14),
+    0 0 0 38px rgba(90, 99, 255, 0.07);
 }
 
 .wave {
@@ -134,7 +154,8 @@
   height: 72px;
 }
 
-.stop-button {
+.stop-button,
+.start-button {
   min-width: 196px;
   min-height: 44px;
   margin-bottom: 12px;
@@ -144,6 +165,10 @@
   background: rgba(12, 18, 34, 0.9);
   font-size: 13px;
   font-weight: 750;
+}
+
+.start-button {
+  background: linear-gradient(135deg, #386cff, #7b5cff);
 }
 
 @media (max-width: 720px) {
