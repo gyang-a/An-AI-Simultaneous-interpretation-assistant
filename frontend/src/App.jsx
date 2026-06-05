@@ -1,5 +1,6 @@
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
+import RealtimeStatusPanel from './components/RealtimeStatusPanel';
 import Sidebar from './components/Sidebar';
 import SubtitlePanel from './components/SubtitlePanel';
 import Topbar from './components/Topbar';
@@ -16,7 +17,10 @@ function App() {
             <ListeningPanel />
             <SubtitlePanel />
           </div>
-          <InputSourcePanel />
+          <div className="side-column">
+            <InputSourcePanel />
+            <RealtimeStatusPanel />
+          </div>
         </div>
       </section>
     </main>

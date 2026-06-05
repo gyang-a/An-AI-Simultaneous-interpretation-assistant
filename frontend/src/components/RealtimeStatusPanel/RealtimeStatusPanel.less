@@ -1,0 +1,92 @@
+.realtime-status-panel {
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(8, 14, 28, 0.72);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+}
+
+.status-panel-header {
+  margin-bottom: 14px;
+}
+
+.status-panel-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+
+.metric-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.metric-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.metric-item dt {
+  color: #9da8ba;
+  font-size: 14px;
+}
+
+.metric-item dd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #f8fafc;
+  font-size: 14px;
+}
+
+.metric-item strong {
+  font-weight: 750;
+}
+
+.metric-item span {
+  min-width: 48px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  color: #7ee7bd;
+  background: rgba(31, 125, 91, 0.24);
+  font-size: 12px;
+  font-weight: 750;
+  text-align: center;
+}
+
+.mini-wave {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 42px;
+  margin-top: 16px;
+  overflow: hidden;
+}
+
+.mini-wave span {
+  flex: 0 0 2px;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #20c9ff, #7c5cff);
+}
+
+.mini-wave span:nth-child(2n) {
+  height: 24px;
+}
+
+.mini-wave span:nth-child(3n) {
+  height: 16px;
+}
+
+.mini-wave span:nth-child(5n) {
+  height: 30px;
+}
+
+.mini-wave span:nth-child(7n) {
+  height: 36px;
+}
