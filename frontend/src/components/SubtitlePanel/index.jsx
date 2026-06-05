@@ -3,11 +3,21 @@ import './SubtitlePanel.less';
 
 function SubtitlePanel({ items, isListening }) {
   const hasItems = items.length > 0;
-  const listRef = useRef(null);
+  const viewportRef = useRef(null);
+  const shouldStickToBottomRef = useRef(true);
+
+  const handleViewportScroll = () => {
+    if (!viewportRef.current) {
+      return;
+    }
+
+    const { scrollTop, scrollHeight, clientHeight } = viewportRef.current;
+    shouldStickToBottomRef.current = scrollHeight - scrollTop - clientHeight < 48;
+  };
 
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
+    if (viewportRef.current && shouldStickToBottomRef.current) {
+      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
     }
   }, [items]);
 
@@ -32,37 +42,43 @@ function SubtitlePanel({ items, isListening }) {
       </div>
 
       {hasItems ? (
-        <ol className="subtitle-list" ref={listRef}>
-          {items.map((item, index) => {
-            const isActive = index === items.length - 1;
-            const isRevised = item.type === 'revision';
-            const itemClassName = [
-              'subtitle-item',
-              isActive ? 'active' : '',
-              isRevised ? 'revised' : ''
-            ]
-              .filter(Boolean)
-              .join(' ');
+        <div
+          className="subtitle-scroll"
+          onScroll={handleViewportScroll}
+          ref={viewportRef}
+        >
+          <ol className="subtitle-list">
+            {items.map((item, index) => {
+              const isActive = index === items.length - 1;
+              const isRevised = item.type === 'revision';
+              const itemClassName = [
+                'subtitle-item',
+                isActive ? 'active' : '',
+                isRevised ? 'revised' : ''
+              ]
+                .filter(Boolean)
+                .join(' ');
 
-            return (
-              <li className={itemClassName} key={item.id}>
-                <time>{item.time}</time>
-                <div className="subtitle-copy">
-                  <p>{item.source}</p>
-                  <strong>{item.translation}</strong>
-                  {isRevised && item.revisionReason && (
-                    <small className="revision-reason">
-                      翻译修正说明：{item.revisionReason}
-                    </small>
-                  )}
-                </div>
-                <span className={isRevised ? 'subtitle-status revised' : 'subtitle-status'}>
-                  {item.status}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+              return (
+                <li className={itemClassName} key={item.id}>
+                  <time>{item.time}</time>
+                  <div className="subtitle-copy">
+                    <p>{item.source}</p>
+                    <strong>{item.translation}</strong>
+                    {isRevised && item.revisionReason && (
+                      <small className="revision-reason">
+                        翻译修正说明：{item.revisionReason}
+                      </small>
+                    )}
+                  </div>
+                  <span className={isRevised ? 'subtitle-status revised' : 'subtitle-status'}>
+                    {item.status}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        </div>
       ) : (
         <div className="subtitle-empty">
           {isListening ? '正在等待第一条字幕...' : '点击开始监听后，实时字幕会显示在这里。'}

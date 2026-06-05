@@ -41,6 +41,10 @@ function isPunctuationOnly(text) {
   return /^[\s，。！？、,.!?;；:：]+$/.test(text);
 }
 
+function endsWithSentencePunctuation(text) {
+  return /[。！？.!?]\s*$/.test(text);
+}
+
 function mergeRecognizedText(currentText, nextText, result) {
   if (!currentText) {
     return nextText;
@@ -156,6 +160,17 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     }
 
     const isRevision = payload.data?.result?.pgs === 'rpl';
+    if (
+      activeSegmentId &&
+      activeSegmentText &&
+      !isRevision &&
+      !isPunctuationOnly(text) &&
+      endsWithSentencePunctuation(activeSegmentText)
+    ) {
+      activeSegmentId = '';
+      activeSegmentText = '';
+    }
+
     if (!activeSegmentId) {
       segmentIndex += 1;
       activeSegmentId = `xfyun-${segmentIndex}`;
