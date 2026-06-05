@@ -6,20 +6,15 @@ import RealtimeStatusPanel from './components/RealtimeStatusPanel';
 import Sidebar from './components/Sidebar';
 import SubtitlePanel from './components/SubtitlePanel';
 import Topbar from './components/Topbar';
-import { getMockSubtitleEvents } from './mocks/subtitleEvents';
+import { createSubtitleSocket } from './services/subtitleSocket';
 
 function App() {
   const [isListening, setIsListening] = useState(false);
   const [subtitleItems, setSubtitleItems] = useState([]);
   const [playbackOffsetMs, setPlaybackOffsetMs] = useState(0);
-  const playbackTimersRef = useRef([]);
   const playbackStartedAtRef = useRef(0);
   const statusTimerRef = useRef(null);
-
-  const clearPlaybackTimers = () => {
-    playbackTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
-    playbackTimersRef.current = [];
-  };
+  const subtitleSocketRef = useRef(null);
 
   const clearStatusTimer = () => {
     if (statusTimerRef.current) {
@@ -28,7 +23,18 @@ function App() {
     }
   };
 
+  const closeSubtitleSocket = () => {
+    if (subtitleSocketRef.current) {
+      subtitleSocketRef.current.close();
+      subtitleSocketRef.current = null;
+    }
+  };
+
   const applySubtitleEvent = (event) => {
+    if (Number.isFinite(event.offsetMs)) {
+      setPlaybackOffsetMs(event.offsetMs);
+    }
+
     setSubtitleItems((currentItems) => {
       const nextItem = {
         id: event.segmentId,
@@ -51,7 +57,7 @@ function App() {
   };
 
   const handleStartListening = () => {
-    clearPlaybackTimers();
+    closeSubtitleSocket();
     clearStatusTimer();
     setSubtitleItems([]);
     setPlaybackOffsetMs(0);
@@ -62,36 +68,29 @@ function App() {
       setPlaybackOffsetMs(window.performance.now() - playbackStartedAtRef.current);
     }, 500);
 
-    const events = getMockSubtitleEvents();
-    playbackTimersRef.current = events.map((event) =>
-      window.setTimeout(() => {
-        setPlaybackOffsetMs(event.offsetMs);
-        applySubtitleEvent(event);
-      }, event.offsetMs)
-    );
-
-    const lastEvent = events.at(-1);
-    if (lastEvent) {
-      const stopTimerId = window.setTimeout(() => {
-        setIsListening(false);
-        clearPlaybackTimers();
+    subtitleSocketRef.current = createSubtitleSocket({
+      onSubtitleEvent: applySubtitleEvent,
+      onClose: () => {
+        subtitleSocketRef.current = null;
         clearStatusTimer();
-        setPlaybackOffsetMs(lastEvent.offsetMs);
-      }, lastEvent.offsetMs + 700);
-
-      playbackTimersRef.current.push(stopTimerId);
-    }
+        setIsListening(false);
+      },
+      onError: () => {
+        clearStatusTimer();
+        setIsListening(false);
+      }
+    });
   };
 
   const handleStopListening = () => {
-    clearPlaybackTimers();
+    closeSubtitleSocket();
     clearStatusTimer();
     setIsListening(false);
   };
 
   useEffect(() => {
     return () => {
-      clearPlaybackTimers();
+      closeSubtitleSocket();
       clearStatusTimer();
     };
   }, []);
