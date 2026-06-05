@@ -8,6 +8,7 @@ export function getTranslationProviderConfig() {
     url: process.env.XUNFEI_TRANSLATION_URL || DEFAULT_XUNFEI_TRANSLATION_URL,
     from: process.env.XUNFEI_TRANSLATION_FROM || 'en',
     to: process.env.XUNFEI_TRANSLATION_TO || 'cn',
+    debounceMs: Number(process.env.TRANSLATION_DEBOUNCE_MS || 100),
     timeoutMs: Number(process.env.TRANSLATION_TIMEOUT_MS || 15000)
   };
 }
