@@ -1,3 +1,5 @@
+import './EmptyStage.less';
+
 function EmptyStage() {
   return (
     <section className="empty-stage" aria-label="工作台占位">

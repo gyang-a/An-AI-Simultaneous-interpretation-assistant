@@ -1,3 +1,5 @@
+import './Sidebar.less';
+
 const navItems = [
   { label: '实时翻译', icon: '◆' },
   { label: '导入翻译', icon: '⇩' },

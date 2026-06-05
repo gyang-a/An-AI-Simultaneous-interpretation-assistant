@@ -1,6 +1,6 @@
-import EmptyStage from './components/EmptyStage.jsx';
-import Sidebar from './components/Sidebar.jsx';
-import Topbar from './components/Topbar.jsx';
+import ListeningPanel from './components/ListeningPanel';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
 
       <section className="workspace" aria-labelledby="page-title">
         <Topbar />
-        <EmptyStage />
+        <ListeningPanel />
       </section>
     </main>
   );

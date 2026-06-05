@@ -1,3 +1,5 @@
+import './Topbar.less';
+
 function Topbar() {
   return (
     <header className="topbar">
