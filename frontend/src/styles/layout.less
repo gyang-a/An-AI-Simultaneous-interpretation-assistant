@@ -30,8 +30,9 @@
 .side-column {
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+  padding-top: 60px;
 }
 
 @media (max-width: 1180px) {
@@ -41,6 +42,10 @@
 
   .workspace-grid {
     grid-template-columns: 1fr;
+  }
+
+  .side-column {
+    padding-top: 0;
   }
 }
 
