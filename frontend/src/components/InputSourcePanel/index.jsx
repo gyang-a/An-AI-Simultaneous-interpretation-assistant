@@ -5,24 +5,25 @@ const sources = [
     id: 'system',
     icon: 'SYS',
     title: '系统音频',
-    description: '监听电脑播放的声音'
+    description: '监听电脑或浏览器标签页播放的声音'
   },
   {
     id: 'microphone',
     icon: 'MIC',
     title: '麦克风',
-    description: '监听麦克风输入的声音',
-    active: true
+    description: '监听麦克风输入的声音'
   },
   {
     id: 'mixed',
     icon: 'MIX',
     title: '混合监听',
-    description: '同时监听系统音频和麦克风'
+    description: '同时监听系统音频和麦克风',
+    disabled: true,
+    badge: '待接入'
   }
 ];
 
-function InputSourcePanel() {
+function InputSourcePanel({ disabled, selectedSource, onSelectSource }) {
   return (
     <aside className="input-source-panel" aria-labelledby="input-source-title">
       <div className="side-panel-header">
@@ -30,26 +31,38 @@ function InputSourcePanel() {
       </div>
 
       <div className="source-list">
-        {sources.map((source) => (
-          <button
-            className={source.active ? 'source-option active' : 'source-option'}
-            type="button"
-            key={source.id}
-          >
-            <span className="source-icon" aria-hidden="true">
-              {source.icon}
-            </span>
-            <span className="source-copy">
-              <strong>{source.title}</strong>
-              <small>{source.description}</small>
-            </span>
-            {source.active && (
-              <span className="source-check" aria-hidden="true">
-                ✓
+        {sources.map((source) => {
+          const isActive = source.id === selectedSource;
+          const isDisabled = disabled || source.disabled;
+
+          return (
+            <button
+              className={isActive ? 'source-option active' : 'source-option'}
+              disabled={isDisabled}
+              type="button"
+              key={source.id}
+              onClick={() => onSelectSource(source.id)}
+            >
+              <span className="source-icon" aria-hidden="true">
+                {source.icon}
               </span>
-            )}
-          </button>
-        ))}
+              <span className="source-copy">
+                <strong>{source.title}</strong>
+                <small>{source.description}</small>
+              </span>
+              {source.badge && !isActive && (
+                <span className="source-badge">
+                  {source.badge}
+                </span>
+              )}
+              {isActive && (
+                <span className="source-check" aria-hidden="true">
+                  ✓
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </aside>
   );

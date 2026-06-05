@@ -46,6 +46,11 @@
   background: rgba(31, 36, 76, 0.62);
 }
 
+.source-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .source-icon {
   display: inline-grid;
   place-items: center;
@@ -87,6 +92,19 @@
   background: #28c984;
   font-size: 13px;
   font-weight: 800;
+}
+
+.source-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.14);
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 @media (max-width: 1180px) {

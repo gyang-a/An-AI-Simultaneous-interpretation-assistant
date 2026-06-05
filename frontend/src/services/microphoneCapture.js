@@ -34,19 +34,7 @@ function encodePcm16(inputData) {
   return outputData.buffer;
 }
 
-export async function createMicrophoneCapture({ onAudioChunk, onError }) {
-  if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext) {
-    throw new Error('Current browser does not support microphone recording');
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true
-    }
-  });
-
+function createPcmStreamCapture({ stream, onAudioChunk, onError }) {
   const audioContext = new AudioContext();
   const sourceNode = audioContext.createMediaStreamSource(stream);
   const processorNode = audioContext.createScriptProcessor(4096, 1, 1);
@@ -87,4 +75,50 @@ export async function createMicrophoneCapture({ onAudioChunk, onError }) {
       audioContext.close();
     }
   };
+}
+
+export async function createMicrophoneCapture({ onAudioChunk, onError }) {
+  if (!navigator.mediaDevices?.getUserMedia || !window.AudioContext) {
+    throw new Error('Current browser does not support microphone recording');
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    }
+  });
+
+  return createPcmStreamCapture({
+    stream,
+    onAudioChunk,
+    onError
+  });
+}
+
+export async function createSystemAudioCapture({ onAudioChunk, onError }) {
+  if (!navigator.mediaDevices?.getDisplayMedia || !window.AudioContext) {
+    throw new Error('Current browser does not support system audio capture');
+  }
+
+  const stream = await navigator.mediaDevices.getDisplayMedia({
+    audio: true,
+    video: true
+  });
+
+  if (stream.getAudioTracks().length === 0) {
+    stopMediaStream(stream);
+    throw new Error('No system audio track was selected');
+  }
+
+  stream.getAudioTracks().forEach((track) => {
+    track.addEventListener('ended', () => onError?.(new Error('System audio capture ended')));
+  });
+
+  return createPcmStreamCapture({
+    stream,
+    onAudioChunk,
+    onError
+  });
 }
