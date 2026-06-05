@@ -1,9 +1,25 @@
 .quick-actions-panel {
+  position: relative;
   padding: 12px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 8px;
   background: rgba(8, 14, 28, 0.72);
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+}
+
+.copy-toast {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  padding: 7px 10px;
+  border: 1px solid rgba(134, 239, 172, 0.45);
+  border-radius: 8px;
+  color: #dcfce7;
+  background: rgba(22, 101, 52, 0.92);
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.35);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .quick-actions-panel h2 {
@@ -20,7 +36,7 @@
 
 .quick-action {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-height: 30px;
@@ -31,6 +47,21 @@
   color: #cbd5e1;
   background: rgba(15, 23, 42, 0.54);
   text-align: left;
+}
+
+.quick-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.quick-action.success {
+  border-color: rgba(40, 201, 132, 0.45);
+  color: #dcfce7;
+  background: rgba(22, 101, 52, 0.28);
+}
+
+.quick-action.success .quick-action-icon {
+  color: #86efac;
 }
 
 .quick-action-icon {
@@ -46,10 +77,4 @@
   font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.quick-action kbd {
-  color: #9da8ba;
-  font-family: inherit;
-  font-size: 12px;
 }

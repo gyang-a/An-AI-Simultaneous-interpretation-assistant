@@ -9,6 +9,7 @@ function createSubtitleItem(event) {
     time: event.time,
     source: event.sourceText,
     translation: event.translatedText,
+    offsetMs: event.offsetMs,
     status: event.status,
     type: event.type,
     revisionOf: event.revisionOf,
@@ -26,6 +27,7 @@ export const useListeningStore = create((set) => ({
       subtitleItems: [],
       playbackOffsetMs: 0
     }),
+  clearSubtitleItems: () => set({ subtitleItems: [] }),
   setPlaybackOffsetMs: (playbackOffsetMs) => set({ playbackOffsetMs }),
   applySubtitleEvent: (event) =>
     set((state) => {
@@ -40,7 +42,7 @@ export const useListeningStore = create((set) => ({
       return {
         subtitleItems,
         playbackOffsetMs: Number.isFinite(event.offsetMs)
-          ? event.offsetMs
+          ? Math.max(state.playbackOffsetMs, event.offsetMs)
           : state.playbackOffsetMs
       };
     })

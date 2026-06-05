@@ -1,12 +1,10 @@
 import './Sidebar.less';
 
 const navItems = [
-  { label: '实时翻译', icon: '◆' },
-  { label: '导入翻译', icon: '⇩' },
-  { label: '历史记录', icon: '◷' },
-  { label: '术语库', icon: '▤' },
+  { label: '实时翻译', icon: 'RT' },
+  { label: '历史记录', icon: 'HI' },
   { label: '字幕记录', icon: 'CC' },
-  { label: '设置', icon: '⚙' }
+  { label: '设置', icon: 'SET' }
 ];
 
 function Sidebar() {
@@ -39,11 +37,11 @@ function Sidebar() {
 
       <button className="theme-toggle" type="button">
         <span className="theme-icon" aria-hidden="true">
-          ◐
+          ●
         </span>
         深色模式
         <span className="theme-chevron" aria-hidden="true">
-          ˅
+          ›
         </span>
       </button>
     </aside>

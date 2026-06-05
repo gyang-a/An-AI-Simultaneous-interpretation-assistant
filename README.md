@@ -9,10 +9,10 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - 前端支持开始监听、停止监听、字幕列表展示和字幕修正展示
 - 后端提供 WebSocket 字幕流服务，按 Mock 时间线推送 `partial`、`final`、`revision` 字幕事件
 - 前端通过 WebSocket 接收字幕事件，并通过麦克风入口持续发送音频 chunk 到后端
-- 前端实时状态面板使用 Mock 指标联动展示延迟、准确率和已翻译时长
+- 前端实时状态面板展示监听时长和字幕条数，不再依赖 Mock 指标
 - 前端监听状态、字幕列表和播放进度已接入 Zustand 全局状态管理
 - 后端已接入 Mock AI 转写与翻译 Provider，用于封装模拟字幕事件输出
-- 后端已提供 AI Provider 选择入口，当前默认使用 `mock`，并预留讯飞 IAT 语音识别 Provider
+- 后端已提供 AI Provider 选择入口，当前默认使用 `xunfei` 讯飞 IAT 语音识别 Provider
 
 ## 技术栈
 
@@ -33,7 +33,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - ws：提供 WebSocket 服务，当前用于推送 Mock 字幕事件并接收前端音频 chunk
 - Mock AI Provider：封装模拟转写、翻译和修正事件输出，后续可替换为真实 AI Provider
 - Xunfei IAT Provider：通过讯飞语音听写流式 WebAPI 接收 16k PCM 音频并返回识别字幕
-- AI Provider Factory：根据环境变量选择后端 AI Provider，当前支持 `mock`、`xunfei`
+- AI Provider Factory：根据环境变量选择后端 AI Provider，当前支持 `xunfei`
 
 ### 数据与通信
 
@@ -106,7 +106,7 @@ npm run dev
 可选环境变量：
 
 - `PORT`：后端服务端口，默认 `3001`
-- `AI_PROVIDER`：后端 AI Provider，当前支持 `mock`、`xunfei`，默认 `mock`
+- `AI_PROVIDER`：后端 AI Provider，当前支持 `xunfei`，默认 `xunfei`
 - `XUNFEI_APP_ID`：讯飞开放平台应用 AppID
 - `XUNFEI_API_KEY`：讯飞语音听写 APIKey
 - `XUNFEI_API_SECRET`：讯飞语音听写 APISecret
@@ -121,11 +121,8 @@ npm run dev
 ├── backend
 │   ├── config
 │   │   └── aiProviderConfig.js
-│   ├── mocks
-│   │   └── subtitleEvents.js
 │   ├── providers
 │   │   ├── aiTranslationProviderFactory.js
-│   │   ├── mockAiTranslationProvider.js
 │   │   ├── xunfeiIatAuth.js
 │   │   └── xunfeiIatTranslationProvider.js
 │   ├── routes
@@ -140,8 +137,6 @@ npm run dev
 │       ├── App.jsx
 │       ├── components
 │       ├── main.jsx
-│       ├── mocks
-│       │   └── subtitleEvents.js
 │       ├── services
 │       │   ├── microphoneCapture.js
 │       │   └── subtitleSocket.js

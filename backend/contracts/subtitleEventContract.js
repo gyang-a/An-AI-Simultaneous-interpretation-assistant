@@ -1,4 +1,6 @@
-import { SUBTITLE_EVENT_TYPES } from '../mocks/subtitleEvents.js';
+const SUBTITLE_EVENT_TYPES = {
+  REVISION: 'revision'
+};
 
 const requiredTextFields = [
   'segmentId',

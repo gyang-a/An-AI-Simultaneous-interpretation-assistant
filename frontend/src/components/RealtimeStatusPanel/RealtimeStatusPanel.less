@@ -1,92 +1,96 @@
 .realtime-status-panel {
-  padding: 14px;
+  padding: 16px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   border-radius: 8px;
-  background: rgba(8, 14, 28, 0.72);
-  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+  background: rgba(15, 23, 42, 0.72);
+  box-shadow: 0 18px 46px rgba(2, 6, 23, 0.28);
 }
 
 .status-panel-header {
-  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .status-panel-header h2 {
   margin: 0;
-  color: #ffffff;
+  color: #f8fafc;
   font-size: 16px;
-  letter-spacing: 0;
+  font-weight: 700;
 }
 
 .metric-list {
   display: grid;
-  gap: 8px;
-  margin: 0;
+  gap: 10px;
+  margin: 14px 0 0;
 }
 
 .metric-item {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.58);
 }
 
 .metric-item dt {
-  color: #9da8ba;
-  font-size: 13px;
+  color: #94a3b8;
+  font-size: 12px;
 }
 
 .metric-item dd {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
   margin: 0;
-  color: #f8fafc;
-  font-size: 13px;
 }
 
 .metric-item strong {
-  font-weight: 750;
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .metric-item span {
-  min-width: 48px;
-  padding: 3px 8px;
-  border-radius: 8px;
-  color: #7ee7bd;
-  background: rgba(31, 125, 91, 0.24);
+  color: #8bd3ff;
   font-size: 12px;
-  font-weight: 750;
-  text-align: center;
+  white-space: nowrap;
 }
 
 .mini-wave {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 32px;
-  margin-top: 10px;
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(34, 1fr);
+  align-items: end;
+  gap: 3px;
+  height: 48px;
+  margin-top: 14px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.3);
 }
 
 .mini-wave span {
-  flex: 0 0 2px;
-  height: 12px;
+  display: block;
+  height: 18%;
+  min-height: 4px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #20c9ff, #7c5cff);
+  background: rgba(125, 146, 255, 0.35);
 }
 
-.mini-wave span:nth-child(2n) {
-  height: 24px;
+.mini-wave.active span {
+  background: linear-gradient(180deg, #7dd3fc 0%, #7d92ff 100%);
 }
 
 .mini-wave span:nth-child(3n) {
-  height: 16px;
+  height: 54%;
+}
+
+.mini-wave span:nth-child(4n) {
+  height: 72%;
 }
 
 .mini-wave span:nth-child(5n) {
-  height: 30px;
-}
-
-.mini-wave span:nth-child(7n) {
-  height: 30px;
+  height: 36%;
 }

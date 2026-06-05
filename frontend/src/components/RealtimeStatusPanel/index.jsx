@@ -1,41 +1,27 @@
 import './RealtimeStatusPanel.less';
-import { getMockRealtimeStatus } from '../../mocks/subtitleEvents';
 
 const bars = Array.from({ length: 34 }, (_, index) => index);
 
 function formatDuration(durationMs) {
-  const totalSeconds = Math.floor(durationMs / 1000);
+  const safeDurationMs = Number.isFinite(durationMs) ? Math.max(0, durationMs) : 0;
+  const totalSeconds = Math.floor(safeDurationMs / 1000);
   const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
   const seconds = String(totalSeconds % 60).padStart(2, '0');
 
   return `${minutes}:${seconds}`;
 }
 
-function getLatencyGrade(latencyMs) {
-  if (!latencyMs) {
-    return '待机';
-  }
-
-  return latencyMs <= 1200 ? '优秀' : '良好';
-}
-
-function RealtimeStatusPanel({ isListening, playbackOffsetMs }) {
-  const realtimeStatus = getMockRealtimeStatus(playbackOffsetMs);
+function RealtimeStatusPanel({ isListening, playbackOffsetMs, subtitleItems }) {
   const metrics = [
     {
-      label: '延迟',
-      value: isListening ? `${(realtimeStatus.latencyMs / 1000).toFixed(1)} 秒` : '--',
-      grade: getLatencyGrade(realtimeStatus.latencyMs)
-    },
-    {
-      label: '准确率',
-      value: isListening ? `${realtimeStatus.accuracy.toFixed(1)}%` : '--',
-      grade: isListening ? '模拟' : '待机'
-    },
-    {
-      label: '已翻译时长',
-      value: formatDuration(realtimeStatus.translatedDurationMs),
+      label: '监听时长',
+      value: formatDuration(playbackOffsetMs),
       grade: isListening ? '进行中' : '待机'
+    },
+    {
+      label: '字幕条数',
+      value: String(subtitleItems.length),
+      grade: subtitleItems.length ? '实时' : '等待'
     }
   ];
 
@@ -57,7 +43,7 @@ function RealtimeStatusPanel({ isListening, playbackOffsetMs }) {
         ))}
       </dl>
 
-      <div className="mini-wave" aria-hidden="true">
+      <div className={isListening ? 'mini-wave active' : 'mini-wave'} aria-hidden="true">
         {bars.map((bar) => (
           <span key={bar} />
         ))}

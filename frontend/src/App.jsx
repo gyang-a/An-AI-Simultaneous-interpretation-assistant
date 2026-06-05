@@ -16,6 +16,7 @@ function App() {
   const playbackOffsetMs = useListeningStore((state) => state.playbackOffsetMs);
   const setIsListening = useListeningStore((state) => state.setIsListening);
   const resetListeningSession = useListeningStore((state) => state.resetListeningSession);
+  const clearSubtitleItems = useListeningStore((state) => state.clearSubtitleItems);
   const setPlaybackOffsetMs = useListeningStore((state) => state.setPlaybackOffsetMs);
   const applySubtitleEvent = useListeningStore((state) => state.applySubtitleEvent);
   const playbackStartedAtRef = useRef(0);
@@ -95,7 +96,6 @@ function App() {
 
       setIsListening(true);
       playbackStartedAtRef.current = window.performance.now();
-
       statusTimerRef.current = window.setInterval(() => {
         setPlaybackOffsetMs(window.performance.now() - playbackStartedAtRef.current);
       }, 500);
@@ -143,8 +143,12 @@ function App() {
             <RealtimeStatusPanel
               isListening={isListening}
               playbackOffsetMs={playbackOffsetMs}
+              subtitleItems={subtitleItems}
             />
-            <QuickActionsPanel />
+            <QuickActionsPanel
+              subtitleItems={subtitleItems}
+              onClearSubtitles={clearSubtitleItems}
+            />
           </div>
         </div>
       </section>

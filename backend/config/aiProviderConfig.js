@@ -1,4 +1,4 @@
-const DEFAULT_AI_PROVIDER = 'mock';
+const DEFAULT_AI_PROVIDER = 'xunfei';
 
 export function getAiProviderConfig() {
   return {
