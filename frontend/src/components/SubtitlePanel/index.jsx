@@ -25,19 +25,35 @@ function SubtitlePanel({ items, isListening }) {
 
       {hasItems ? (
         <ol className="subtitle-list">
-          {items.map((item, index) => (
-            <li
-              className={index === items.length - 1 ? 'subtitle-item active' : 'subtitle-item'}
-              key={item.id}
-            >
-              <time>{item.time}</time>
-              <div className="subtitle-copy">
-                <p>{item.source}</p>
-                <strong>{item.translation}</strong>
-              </div>
-              <span className="subtitle-status">{item.status}</span>
-            </li>
-          ))}
+          {items.map((item, index) => {
+            const isActive = index === items.length - 1;
+            const isRevised = item.type === 'revision';
+            const itemClassName = [
+              'subtitle-item',
+              isActive ? 'active' : '',
+              isRevised ? 'revised' : ''
+            ]
+              .filter(Boolean)
+              .join(' ');
+
+            return (
+              <li className={itemClassName} key={item.id}>
+                <time>{item.time}</time>
+                <div className="subtitle-copy">
+                  <p>{item.source}</p>
+                  <strong>{item.translation}</strong>
+                  {isRevised && item.revisionReason && (
+                    <small className="revision-reason">
+                      翻译修正说明：{item.revisionReason}
+                    </small>
+                  )}
+                </div>
+                <span className={isRevised ? 'subtitle-status revised' : 'subtitle-status'}>
+                  {item.status}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       ) : (
         <div className="subtitle-empty">

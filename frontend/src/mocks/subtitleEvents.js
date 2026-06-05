@@ -29,7 +29,7 @@ export const mockSubtitleEvents = [
     offsetMs: 2600,
     time: '00:00:04',
     sourceText: 'It can improve productivity and automate routine tasks,',
-    translatedText: '它可以提高生产力，并自动化常规任务，',
+    translatedText: '它可以提高产量，并自动完成日常任务，',
     status: '翻译中'
   },
   {
@@ -38,7 +38,7 @@ export const mockSubtitleEvents = [
     offsetMs: 3800,
     time: '00:00:05',
     sourceText: 'It can improve productivity and automate routine tasks,',
-    translatedText: '它可以提高生产力，并自动化常规任务，',
+    translatedText: '它可以提高产量，并自动完成日常任务，',
     status: '已确认'
   },
   {
@@ -55,10 +55,10 @@ export const mockSubtitleEvents = [
     segmentId: 'seg-002',
     offsetMs: 6200,
     time: '00:00:05',
-    sourceText: 'It has the potential to improve productivity and automate tasks,',
-    translatedText: '它有潜力提高生产力，并自动化任务，',
+    sourceText: 'It can improve productivity and automate routine tasks,',
+    translatedText: '它可以提高生产力，并自动化常规任务，',
     status: '已修正',
-    revisionReason: '结合后文语境，将 can 改为 has the potential to，语气更贴近原意。'
+    revisionReason: '结合后文技术语境，将“提高产量”修正为“提高生产力”，并将“自动完成日常任务”调整为“自动化常规任务”。'
   },
   {
     type: SUBTITLE_EVENT_TYPES.FINAL,
