@@ -1,0 +1,146 @@
+.input-source-panel {
+  align-self: start;
+  padding: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(8, 14, 28, 0.72);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+}
+
+.side-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.side-panel-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 17px;
+  letter-spacing: 0;
+}
+
+.side-panel-header span {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 50%;
+  color: #9da8ba;
+  font-size: 12px;
+}
+
+.source-list {
+  display: grid;
+  gap: 10px;
+}
+
+.source-option {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 66px;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 8px;
+  color: #e5e7eb;
+  background: rgba(15, 23, 42, 0.54);
+  text-align: left;
+}
+
+.source-option.active {
+  border-color: rgba(124, 92, 255, 0.9);
+  background: rgba(31, 36, 76, 0.62);
+}
+
+.source-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  color: #99a9ff;
+  font-size: 20px;
+}
+
+.source-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.source-copy strong {
+  color: #9eaaff;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.source-copy small {
+  overflow: hidden;
+  color: #9da8ba;
+  font-size: 12px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.source-check {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #28c984;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.sensitivity-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+.sensitivity-row strong {
+  color: #dbe4f2;
+}
+
+.sensitivity-track {
+  position: relative;
+  height: 5px;
+  margin-top: 14px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.sensitivity-track span {
+  display: block;
+  width: 70%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #3c82ff, #7c5cff);
+}
+
+.sensitivity-track i {
+  position: absolute;
+  top: 50%;
+  left: 70%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #dbe4f2;
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 1180px) {
+  .input-source-panel {
+    align-self: stretch;
+  }
+}
