@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { getMockSubtitleEvents } from '../mocks/subtitleEvents.js';
+import { createMockAiTranslationSession } from '../providers/mockAiTranslationProvider.js';
 
 const SUBTITLE_SOCKET_PATH = '/ws/subtitles';
 const SOCKET_CONTROL_TYPES = {
@@ -20,20 +20,15 @@ export function attachSubtitleSocket(server) {
   });
 
   subtitleSocketServer.on('connection', (socket) => {
-    const audioSession = {
-      chunkCount: 0,
-      mimeType: ''
-    };
-
-    const timers = getMockSubtitleEvents().map((event) =>
-      setTimeout(() => {
+    const translationSession = createMockAiTranslationSession({
+      onSubtitleEvent: (event) => {
         sendJson(socket, event);
-      }, event.offsetMs)
-    );
+      }
+    });
 
     socket.on('message', (message, isBinary) => {
       if (isBinary) {
-        audioSession.chunkCount += 1;
+        translationSession.receiveAudioChunk(message);
         return;
       }
 
@@ -41,11 +36,11 @@ export function attachSubtitleSocket(server) {
         const payload = JSON.parse(message.toString());
 
         if (payload.type === SOCKET_CONTROL_TYPES.AUDIO_START) {
-          audioSession.mimeType = payload.payload?.mimeType ?? '';
+          translationSession.start(payload.payload);
         }
 
         if (payload.type === SOCKET_CONTROL_TYPES.AUDIO_STOP) {
-          audioSession.mimeType = '';
+          translationSession.stop();
         }
       } catch (error) {
         sendJson(socket, {
@@ -56,7 +51,7 @@ export function attachSubtitleSocket(server) {
     });
 
     socket.on('close', () => {
-      timers.forEach((timerId) => clearTimeout(timerId));
+      translationSession.stop();
     });
   });
 
