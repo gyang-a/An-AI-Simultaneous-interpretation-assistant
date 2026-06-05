@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
 import QuickActionsPanel from './components/QuickActionsPanel';
@@ -8,11 +8,16 @@ import SubtitlePanel from './components/SubtitlePanel';
 import Topbar from './components/Topbar';
 import { createMicrophoneCapture } from './services/microphoneCapture';
 import { createSubtitleSocket } from './services/subtitleSocket';
+import { useListeningStore } from './stores/listeningStore';
 
 function App() {
-  const [isListening, setIsListening] = useState(false);
-  const [subtitleItems, setSubtitleItems] = useState([]);
-  const [playbackOffsetMs, setPlaybackOffsetMs] = useState(0);
+  const isListening = useListeningStore((state) => state.isListening);
+  const subtitleItems = useListeningStore((state) => state.subtitleItems);
+  const playbackOffsetMs = useListeningStore((state) => state.playbackOffsetMs);
+  const setIsListening = useListeningStore((state) => state.setIsListening);
+  const resetListeningSession = useListeningStore((state) => state.resetListeningSession);
+  const setPlaybackOffsetMs = useListeningStore((state) => state.setPlaybackOffsetMs);
+  const applySubtitleEvent = useListeningStore((state) => state.applySubtitleEvent);
   const playbackStartedAtRef = useRef(0);
   const statusTimerRef = useRef(null);
   const subtitleSocketRef = useRef(null);
@@ -39,38 +44,11 @@ function App() {
     }
   };
 
-  const applySubtitleEvent = (event) => {
-    if (Number.isFinite(event.offsetMs)) {
-      setPlaybackOffsetMs(event.offsetMs);
-    }
-
-    setSubtitleItems((currentItems) => {
-      const nextItem = {
-        id: event.segmentId,
-        time: event.time,
-        source: event.sourceText,
-        translation: event.translatedText,
-        status: event.status,
-        type: event.type,
-        revisionReason: event.revisionReason
-      };
-
-      const itemIndex = currentItems.findIndex((item) => item.id === event.segmentId);
-
-      if (itemIndex === -1) {
-        return [...currentItems, nextItem];
-      }
-
-      return currentItems.map((item, index) => (index === itemIndex ? nextItem : item));
-    });
-  };
-
   const handleStartListening = async () => {
     stopMicrophoneCapture();
     closeSubtitleSocket();
     clearStatusTimer();
-    setSubtitleItems([]);
-    setPlaybackOffsetMs(0);
+    resetListeningSession();
 
     subtitleSocketRef.current = createSubtitleSocket({
       onSubtitleEvent: applySubtitleEvent,
