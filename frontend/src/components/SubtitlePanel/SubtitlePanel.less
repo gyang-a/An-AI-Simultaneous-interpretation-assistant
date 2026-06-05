@@ -1,4 +1,8 @@
 .subtitle-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
   margin-top: 14px;
   padding: 16px;
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -62,9 +66,10 @@
 }
 
 .subtitle-scroll {
-  max-height: 360px;
+  flex: 1 1 auto;
+  min-height: 180px;
   margin-top: 12px;
-  overflow-y: auto;
+  overflow-y: scroll;
   padding-right: 8px;
   scrollbar-gutter: stable;
   scrollbar-color: rgba(125, 146, 255, 0.85) rgba(15, 23, 42, 0.62);
@@ -180,6 +185,7 @@
 }
 
 .show-more {
+  flex: 0 0 auto;
   display: block;
   min-height: 36px;
   margin: 10px auto 0;

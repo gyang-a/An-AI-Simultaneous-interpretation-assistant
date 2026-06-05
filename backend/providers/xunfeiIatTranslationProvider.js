@@ -8,17 +8,15 @@ const IAT_FRAME_STATUS = {
   LAST: 2
 };
 
-function createSubtitleEvent({ segmentId, revisionOf, offsetMs, text, isFinal, isRevision }) {
+function createSubtitleEvent({ segmentId, offsetMs, text, isFinal }) {
   return {
-    type: isRevision ? 'revision' : isFinal ? 'final' : 'partial',
+    type: isFinal ? 'final' : 'partial',
     segmentId,
-    revisionOf,
     offsetMs,
     time: formatTime(offsetMs),
     sourceText: text,
     translatedText: text,
-    status: isRevision ? '已修正' : isFinal ? '已识别' : '识别中',
-    revisionReason: isRevision ? '讯飞动态修正返回了更准确的识别结果。' : undefined
+    status: isFinal ? '已识别' : '识别中'
   };
 }
 
@@ -45,26 +43,6 @@ function endsWithSentencePunctuation(text) {
   return /[。！？.!?]\s*$/.test(text);
 }
 
-function mergeRecognizedText(currentText, nextText, result) {
-  if (!currentText) {
-    return nextText;
-  }
-
-  if (isPunctuationOnly(nextText)) {
-    return `${currentText}${nextText}`;
-  }
-
-  if (result?.pgs === 'rpl') {
-    return nextText;
-  }
-
-  if (currentText.endsWith(nextText)) {
-    return currentText;
-  }
-
-  return `${currentText}${nextText}`;
-}
-
 export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) {
   const config = getXunfeiIatConfig();
   let iatSocket = null;
@@ -75,6 +53,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   let segmentIndex = 0;
   let activeSegmentId = '';
   let activeSegmentText = '';
+  let recognizedPieces = new Map();
 
   function assertConfig() {
     if (!config.appId || !config.apiKey || !config.apiSecret) {
@@ -142,6 +121,53 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     chunks.forEach((chunk) => sendAudioFrame(chunk));
   }
 
+  function getResultSerialNumber(result) {
+    return Number.isInteger(result?.sn) ? result.sn : recognizedPieces.size + 1;
+  }
+
+  function removeReplacedPieces(result) {
+    if (!Array.isArray(result?.rg) || result.rg.length < 2) {
+      return null;
+    }
+
+    const [startSerialNumber, endSerialNumber] = result.rg;
+    Array.from(recognizedPieces.keys()).forEach((serialNumber) => {
+      if (serialNumber >= startSerialNumber && serialNumber <= endSerialNumber) {
+        recognizedPieces.delete(serialNumber);
+      }
+    });
+
+    return startSerialNumber;
+  }
+
+  function appendRecognizedPiece(result, text) {
+    let serialNumber = getResultSerialNumber(result);
+
+    if (result?.pgs === 'rpl') {
+      serialNumber = removeReplacedPieces(result) ?? serialNumber;
+    }
+
+    if (isPunctuationOnly(text) && recognizedPieces.has(serialNumber - 1)) {
+      recognizedPieces.set(serialNumber - 1, `${recognizedPieces.get(serialNumber - 1)}${text}`);
+      return;
+    }
+
+    recognizedPieces.set(serialNumber, text);
+  }
+
+  function assembleRecognizedText() {
+    return Array.from(recognizedPieces.entries())
+      .sort(([leftSerialNumber], [rightSerialNumber]) => leftSerialNumber - rightSerialNumber)
+      .map(([, text]) => text)
+      .join('');
+  }
+
+  function resetActiveSegment() {
+    activeSegmentId = '';
+    activeSegmentText = '';
+    recognizedPieces = new Map();
+  }
+
   function handleIatMessage(message) {
     const payload = JSON.parse(message.toString());
 
@@ -159,38 +185,36 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
       return;
     }
 
-    const isRevision = payload.data?.result?.pgs === 'rpl';
+    const isReplacementResult = payload.data?.result?.pgs === 'rpl';
     if (
       activeSegmentId &&
       activeSegmentText &&
-      !isRevision &&
+      !isReplacementResult &&
       !isPunctuationOnly(text) &&
       endsWithSentencePunctuation(activeSegmentText)
     ) {
-      activeSegmentId = '';
-      activeSegmentText = '';
+      resetActiveSegment();
     }
 
     if (!activeSegmentId) {
       segmentIndex += 1;
       activeSegmentId = `xfyun-${segmentIndex}`;
     }
-    activeSegmentText = mergeRecognizedText(activeSegmentText, text, payload.data?.result);
+
+    appendRecognizedPiece(payload.data?.result, text);
+    activeSegmentText = assembleRecognizedText();
 
     onSubtitleEvent(
       createSubtitleEvent({
         segmentId: activeSegmentId,
-        revisionOf: isRevision ? activeSegmentId : undefined,
         offsetMs: Date.now() - startedAt,
         text: activeSegmentText,
-        isFinal: payload.data?.status === 2,
-        isRevision
+        isFinal: payload.data?.status === 2 || endsWithSentencePunctuation(activeSegmentText)
       })
     );
 
     if (payload.data?.status === 2) {
-      activeSegmentId = '';
-      activeSegmentText = '';
+      resetActiveSegment();
       resetCurrentIatSocket();
     }
   }
@@ -203,8 +227,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     isSessionActive = true;
     pendingAudioChunks = [];
     segmentIndex = 0;
-    activeSegmentId = '';
-    activeSegmentText = '';
+    resetActiveSegment();
   }
 
   function receiveAudioChunk(audioChunk) {
@@ -214,8 +237,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   function stop() {
     isSessionActive = false;
     pendingAudioChunks = [];
-    activeSegmentId = '';
-    activeSegmentText = '';
+    resetActiveSegment();
 
     if (iatSocket?.readyState === WebSocket.OPEN && hasSentFirstFrame) {
       iatSocket.send(JSON.stringify(createAudioFrame(Buffer.alloc(0), IAT_FRAME_STATUS.LAST)));
