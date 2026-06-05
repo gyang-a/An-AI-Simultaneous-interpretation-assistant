@@ -55,7 +55,9 @@ function App() {
       onOpen: () => {
         if (microphoneCaptureRef.current) {
           subtitleSocketRef.current?.sendAudioStart({
-            mimeType: microphoneCaptureRef.current.mimeType
+            mimeType: microphoneCaptureRef.current.mimeType,
+            sampleRate: microphoneCaptureRef.current.sampleRate,
+            encoding: microphoneCaptureRef.current.encoding
           });
         }
       },
@@ -86,7 +88,9 @@ function App() {
       });
 
       subtitleSocketRef.current?.sendAudioStart({
-        mimeType: microphoneCaptureRef.current.mimeType
+        mimeType: microphoneCaptureRef.current.mimeType,
+        sampleRate: microphoneCaptureRef.current.sampleRate,
+        encoding: microphoneCaptureRef.current.encoding
       });
 
       setIsListening(true);

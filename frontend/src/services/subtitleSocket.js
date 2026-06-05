@@ -67,7 +67,7 @@ export function createSubtitleSocket({ onSubtitleEvent, onOpen, onClose, onError
       });
     },
     sendAudioChunk(chunk) {
-      if (socket.readyState === WebSocket.OPEN && chunk?.size > 0) {
+      if (socket.readyState === WebSocket.OPEN && chunk?.byteLength > 0) {
         socket.send(chunk);
       }
     }
