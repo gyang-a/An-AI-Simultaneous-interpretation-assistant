@@ -37,14 +37,40 @@ function extractIatText(result) {
     .join('');
 }
 
+function isPunctuationOnly(text) {
+  return /^[\s，。！？、,.!?;；:：]+$/.test(text);
+}
+
+function mergeRecognizedText(currentText, nextText, result) {
+  if (!currentText) {
+    return nextText;
+  }
+
+  if (isPunctuationOnly(nextText)) {
+    return `${currentText}${nextText}`;
+  }
+
+  if (result?.pgs === 'rpl') {
+    return nextText;
+  }
+
+  if (currentText.endsWith(nextText)) {
+    return currentText;
+  }
+
+  return `${currentText}${nextText}`;
+}
+
 export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) {
   const config = getXunfeiIatConfig();
   let iatSocket = null;
   let startedAt = 0;
   let hasSentFirstFrame = false;
+  let isSessionActive = false;
   let pendingAudioChunks = [];
   let segmentIndex = 0;
   let activeSegmentId = '';
+  let activeSegmentText = '';
 
   function assertConfig() {
     if (!config.appId || !config.apiKey || !config.apiSecret) {
@@ -61,6 +87,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
         language: config.language,
         domain: config.domain,
         accent: config.accent,
+        vad_eos: config.vadEos,
         dwa: config.enableDynamicCorrection ? 'wpgs' : undefined
       },
       data: {
@@ -84,6 +111,14 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   }
 
   function sendAudioFrame(audioBuffer) {
+    if (!isSessionActive) {
+      return;
+    }
+
+    if (!iatSocket || iatSocket.readyState === WebSocket.CLOSED) {
+      openIatSocket();
+    }
+
     if (!iatSocket || iatSocket.readyState !== WebSocket.OPEN) {
       pendingAudioChunks.push(audioBuffer);
       return;
@@ -113,6 +148,10 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
 
     const text = extractIatText(payload.data?.result);
     if (!text) {
+      if (payload.data?.status === 2) {
+        resetCurrentIatSocket();
+      }
+
       return;
     }
 
@@ -121,13 +160,14 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
       segmentIndex += 1;
       activeSegmentId = `xfyun-${segmentIndex}`;
     }
+    activeSegmentText = mergeRecognizedText(activeSegmentText, text, payload.data?.result);
 
     onSubtitleEvent(
       createSubtitleEvent({
         segmentId: activeSegmentId,
         revisionOf: isRevision ? activeSegmentId : undefined,
         offsetMs: Date.now() - startedAt,
-        text,
+        text: activeSegmentText,
         isFinal: payload.data?.status === 2,
         isRevision
       })
@@ -135,6 +175,8 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
 
     if (payload.data?.status === 2) {
       activeSegmentId = '';
+      activeSegmentText = '';
+      resetCurrentIatSocket();
     }
   }
 
@@ -143,20 +185,11 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     stop();
     startedAt = Date.now();
     hasSentFirstFrame = false;
+    isSessionActive = true;
     pendingAudioChunks = [];
     segmentIndex = 0;
     activeSegmentId = '';
-
-    iatSocket = new WebSocket(
-      createXunfeiIatAuthUrl(config.url, config.apiKey, config.apiSecret)
-    );
-
-    iatSocket.on('open', flushPendingAudioChunks);
-    iatSocket.on('message', handleIatMessage);
-    iatSocket.on('error', (error) => onError?.(error));
-    iatSocket.on('close', () => {
-      iatSocket = null;
-    });
+    activeSegmentText = '';
   }
 
   function receiveAudioChunk(audioChunk) {
@@ -164,7 +197,10 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   }
 
   function stop() {
+    isSessionActive = false;
     pendingAudioChunks = [];
+    activeSegmentId = '';
+    activeSegmentText = '';
 
     if (iatSocket?.readyState === WebSocket.OPEN && hasSentFirstFrame) {
       iatSocket.send(JSON.stringify(createAudioFrame(Buffer.alloc(0), IAT_FRAME_STATUS.LAST)));
@@ -181,6 +217,30 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
       provider: 'xunfei',
       startedAt
     };
+  }
+
+  function resetCurrentIatSocket() {
+    hasSentFirstFrame = false;
+
+    if (iatSocket) {
+      iatSocket.close(1000);
+      iatSocket = null;
+    }
+  }
+
+  function openIatSocket() {
+    hasSentFirstFrame = false;
+
+    iatSocket = new WebSocket(
+      createXunfeiIatAuthUrl(config.url, config.apiKey, config.apiSecret)
+    );
+
+    iatSocket.on('open', flushPendingAudioChunks);
+    iatSocket.on('message', handleIatMessage);
+    iatSocket.on('error', (error) => onError?.(error));
+    iatSocket.on('close', () => {
+      iatSocket = null;
+    });
   }
 
   return {

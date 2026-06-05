@@ -22,7 +22,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - Vite 8：前端开发服务器与构建工具
 - Less：作为 CSS 预处理器，按全局、布局和组件维度拆分样式，便于后续维护
 - Zustand：管理监听状态、字幕列表和播放进度
-- MediaRecorder API：采集麦克风音频并切分为音频 chunk
+- Web Audio API：采集麦克风音频，降采样并编码为 16k PCM chunk
 - WebSocket：接收后端字幕事件，并向后端发送音频控制消息和音频 chunk
 
 ### 后端
@@ -112,6 +112,7 @@ npm run dev
 - `XUNFEI_API_SECRET`：讯飞语音听写 APISecret
 - `XUNFEI_IAT_URL`：讯飞语音听写 WebSocket 地址，默认 `wss://iat-api.xfyun.cn/v2/iat`
 - `XUNFEI_IAT_LANGUAGE`：识别语种，默认 `zh_cn`
+- `XUNFEI_IAT_VAD_EOS`：讯飞端点检测静音时长，默认 `5000`
 
 ## 目录结构
 
