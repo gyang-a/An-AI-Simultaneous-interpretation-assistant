@@ -53,6 +53,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - `@vitejs/plugin-react`：React 插件，当前使用 `^6.0.2`
 - `concurrently`：同时启动前端和后端开发服务，当前使用 `^9.2.1`
 - `cors`：后端跨域中间件，当前使用 `^2.8.5`
+- `dotenv`：读取本地 `.env` 配置文件，当前使用 `^17.2.3`
 - `express`：后端 HTTP 服务框架，当前使用 `^5.1.0`
 - `react`：前端 UI 框架，当前使用 `^19.1.1`
 - `react-dom`：React DOM 渲染入口，当前使用 `^19.1.1`
@@ -66,6 +67,25 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - `nodemon`：后端开发时自动重启，当前使用 `^3.1.10`
 
 ## 本地启动
+
+先复制配置模板，并填写真实密钥：
+
+```bash
+copy .env.example .env
+```
+
+`.env` 示例：
+
+```env
+AI_PROVIDER=xunfei
+PORT=3001
+
+XUNFEI_APP_ID=你的讯飞AppID
+XUNFEI_API_KEY=你的讯飞APIKey
+XUNFEI_API_SECRET=你的讯飞APISecret
+```
+
+`.env` 已加入 `.gitignore`，不要提交真实密钥。
 
 ```bash
 npm install
