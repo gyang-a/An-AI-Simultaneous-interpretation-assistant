@@ -12,14 +12,6 @@ const sources = [
     icon: 'MIC',
     title: '麦克风',
     description: '监听麦克风输入的声音'
-  },
-  {
-    id: 'mixed',
-    icon: 'MIX',
-    title: '混合监听',
-    description: '同时监听系统音频和麦克风',
-    disabled: true,
-    badge: '待接入'
   }
 ];
 

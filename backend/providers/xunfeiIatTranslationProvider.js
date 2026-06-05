@@ -1,5 +1,7 @@
 import { WebSocket } from 'ws';
 import { getXunfeiIatConfig } from '../config/xunfeiIatConfig.js';
+import { getTranslationProviderConfig } from '../config/translationProviderConfig.js';
+import { translateText } from './translationProvider.js';
 import { createXunfeiIatAuthUrl } from './xunfeiIatAuth.js';
 
 const IAT_FRAME_STATUS = {
@@ -8,15 +10,15 @@ const IAT_FRAME_STATUS = {
   LAST: 2
 };
 
-function createSubtitleEvent({ segmentId, offsetMs, text, isFinal }) {
+function createSubtitleEvent({ segmentId, offsetMs, text, translatedText, isFinal }) {
   return {
     type: isFinal ? 'final' : 'partial',
     segmentId,
     offsetMs,
     time: formatTime(offsetMs),
     sourceText: text,
-    translatedText: text,
-    status: isFinal ? '已识别' : '识别中'
+    translatedText: translatedText || (isFinal ? '翻译中' : ''),
+    status: isFinal ? (translatedText ? '已翻译' : '翻译中') : '识别中'
   };
 }
 
@@ -73,6 +75,7 @@ function splitLeadingPunctuation(text) {
 
 export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) {
   const config = getXunfeiIatConfig();
+  const translationConfig = getTranslationProviderConfig();
   let iatSocket = null;
   let startedAt = 0;
   let hasSentFirstFrame = false;
@@ -82,6 +85,9 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
   let activeSegmentId = '';
   let recognizedPieces = new Map();
   let segmentMetas = new Map();
+  let translatedSegments = new Map();
+  let pendingTranslations = new Map();
+  let translationVersions = new Map();
   let lastNonReplacementResultAt = 0;
 
   function assertConfig() {
@@ -299,23 +305,108 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
       .filter((segment) => segment.text)
       .forEach(({ segmentId, text }) => {
       const segmentMeta = segmentMetas.get(segmentId);
+      const translatedSegment = translatedSegments.get(segmentId);
+      const translatedText =
+        translatedSegment?.sourceText === text ? translatedSegment.translatedText : '';
+      const isFinal = segmentId !== activeSegmentId || endsWithSentencePunctuation(text);
 
       onSubtitleEvent(
         createSubtitleEvent({
           segmentId,
           offsetMs: segmentMeta?.offsetMs ?? now - startedAt,
           text,
-          isFinal: segmentId !== activeSegmentId || endsWithSentencePunctuation(text)
+          translatedText,
+          isFinal
         })
       );
+
+      if (isFinal) {
+        translateSegment({
+          segmentId,
+          sourceText: text,
+          offsetMs: segmentMeta?.offsetMs ?? now - startedAt
+        });
+      }
     });
   }
 
-  function resetRecognitionState() {
+  function getTranslationContext(segmentId) {
+    return getVisibleSegmentIds()
+      .filter((visibleSegmentId) => visibleSegmentId !== segmentId)
+      .slice(-translationConfig.contextSegments)
+      .map((visibleSegmentId) => {
+        const sourceText = getSegmentText(visibleSegmentId);
+        const translatedSegment = translatedSegments.get(visibleSegmentId);
+
+        return {
+          sourceText,
+          translatedText:
+            translatedSegment?.sourceText === sourceText
+              ? translatedSegment.translatedText
+              : ''
+        };
+      });
+  }
+
+  async function translateSegment({ segmentId, sourceText, offsetMs }) {
+    const currentTranslation = translatedSegments.get(segmentId);
+    if (currentTranslation?.sourceText === sourceText) {
+      return;
+    }
+
+    if (pendingTranslations.get(segmentId) === sourceText) {
+      return;
+    }
+
+    pendingTranslations.set(segmentId, sourceText);
+    const nextVersion = (translationVersions.get(segmentId) || 0) + 1;
+    translationVersions.set(segmentId, nextVersion);
+
+    try {
+      const translatedText = await translateText({
+        text: sourceText,
+        context: getTranslationContext(segmentId)
+      });
+
+      if (translationVersions.get(segmentId) !== nextVersion) {
+        return;
+      }
+
+      translatedSegments.set(segmentId, {
+        sourceText,
+        translatedText
+      });
+
+      onSubtitleEvent(
+        createSubtitleEvent({
+          segmentId,
+          offsetMs,
+          text: sourceText,
+          translatedText,
+          isFinal: true
+        })
+      );
+    } catch (error) {
+      onError?.(error);
+    } finally {
+      if (pendingTranslations.get(segmentId) === sourceText) {
+        pendingTranslations.delete(segmentId);
+      }
+    }
+  }
+
+  function resetActiveRecognitionState() {
     activeSegmentId = '';
     recognizedPieces = new Map();
     segmentMetas = new Map();
     lastNonReplacementResultAt = 0;
+  }
+
+  function resetRecognitionState() {
+    resetActiveRecognitionState();
+    translatedSegments = new Map();
+    pendingTranslations = new Map();
+    translationVersions = new Map();
   }
 
   function handleIatMessage(message) {
@@ -389,7 +480,7 @@ export function createXunfeiIatTranslationSession({ onSubtitleEvent, onError }) 
     }
 
     if (payload.data?.status === 2) {
-      resetRecognitionState();
+      resetActiveRecognitionState();
       resetCurrentIatSocket();
     }
   }
