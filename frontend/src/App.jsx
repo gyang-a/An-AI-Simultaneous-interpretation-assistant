@@ -6,6 +6,7 @@ import RealtimeStatusPanel from './components/RealtimeStatusPanel';
 import Sidebar from './components/Sidebar';
 import SubtitlePanel from './components/SubtitlePanel';
 import Topbar from './components/Topbar';
+import { createMicrophoneCapture } from './services/microphoneCapture';
 import { createSubtitleSocket } from './services/subtitleSocket';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
   const playbackStartedAtRef = useRef(0);
   const statusTimerRef = useRef(null);
   const subtitleSocketRef = useRef(null);
+  const microphoneCaptureRef = useRef(null);
 
   const clearStatusTimer = () => {
     if (statusTimerRef.current) {
@@ -27,6 +29,13 @@ function App() {
     if (subtitleSocketRef.current) {
       subtitleSocketRef.current.close();
       subtitleSocketRef.current = null;
+    }
+  };
+
+  const stopMicrophoneCapture = () => {
+    if (microphoneCaptureRef.current) {
+      microphoneCaptureRef.current.stop();
+      microphoneCaptureRef.current = null;
     }
   };
 
@@ -56,33 +65,69 @@ function App() {
     });
   };
 
-  const handleStartListening = () => {
+  const handleStartListening = async () => {
+    stopMicrophoneCapture();
     closeSubtitleSocket();
     clearStatusTimer();
     setSubtitleItems([]);
     setPlaybackOffsetMs(0);
-    setIsListening(true);
-    playbackStartedAtRef.current = window.performance.now();
-
-    statusTimerRef.current = window.setInterval(() => {
-      setPlaybackOffsetMs(window.performance.now() - playbackStartedAtRef.current);
-    }, 500);
 
     subtitleSocketRef.current = createSubtitleSocket({
       onSubtitleEvent: applySubtitleEvent,
+      onOpen: () => {
+        if (microphoneCaptureRef.current) {
+          subtitleSocketRef.current?.sendAudioStart({
+            mimeType: microphoneCaptureRef.current.mimeType
+          });
+        }
+      },
       onClose: () => {
         subtitleSocketRef.current = null;
+        stopMicrophoneCapture();
         clearStatusTimer();
         setIsListening(false);
       },
       onError: () => {
+        stopMicrophoneCapture();
         clearStatusTimer();
         setIsListening(false);
       }
     });
+
+    try {
+      microphoneCaptureRef.current = await createMicrophoneCapture({
+        onAudioChunk: (chunk) => {
+          subtitleSocketRef.current?.sendAudioChunk(chunk);
+        },
+        onError: () => {
+          stopMicrophoneCapture();
+          closeSubtitleSocket();
+          clearStatusTimer();
+          setIsListening(false);
+        }
+      });
+
+      subtitleSocketRef.current?.sendAudioStart({
+        mimeType: microphoneCaptureRef.current.mimeType
+      });
+
+      setIsListening(true);
+      playbackStartedAtRef.current = window.performance.now();
+
+      statusTimerRef.current = window.setInterval(() => {
+        setPlaybackOffsetMs(window.performance.now() - playbackStartedAtRef.current);
+      }, 500);
+    } catch (error) {
+      stopMicrophoneCapture();
+      closeSubtitleSocket();
+      clearStatusTimer();
+      setIsListening(false);
+    }
   };
 
   const handleStopListening = () => {
+    subtitleSocketRef.current?.sendAudioStop();
+    stopMicrophoneCapture();
     closeSubtitleSocket();
     clearStatusTimer();
     setIsListening(false);
@@ -90,6 +135,7 @@ function App() {
 
   useEffect(() => {
     return () => {
+      stopMicrophoneCapture();
       closeSubtitleSocket();
       clearStatusTimer();
     };
