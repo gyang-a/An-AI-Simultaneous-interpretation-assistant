@@ -1,0 +1,55 @@
+.quick-actions-panel {
+  padding: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 8px;
+  background: rgba(8, 14, 28, 0.72);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+}
+
+.quick-actions-panel h2 {
+  margin: 0 0 12px;
+  color: #ffffff;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.quick-action-list {
+  display: grid;
+  gap: 8px;
+}
+
+.quick-action {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  width: 100%;
+  padding: 0 10px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 6px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.54);
+  text-align: left;
+}
+
+.quick-action-icon {
+  display: inline-grid;
+  place-items: center;
+  color: #a9b7ff;
+  font-size: 13px;
+}
+
+.quick-action span:nth-child(2) {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-action kbd {
+  color: #9da8ba;
+  font-family: inherit;
+  font-size: 12px;
+}
