@@ -1,14 +1,44 @@
 import './RealtimeStatusPanel.less';
-
-const metrics = [
-  { label: '延迟', value: '1.2 秒', grade: '优秀' },
-  { label: '准确率', value: '96.3%', grade: '优秀' },
-  { label: '已翻译时长', value: '00:15:42' }
-];
+import { getMockRealtimeStatus } from '../../mocks/subtitleEvents';
 
 const bars = Array.from({ length: 34 }, (_, index) => index);
 
-function RealtimeStatusPanel() {
+function formatDuration(durationMs) {
+  const totalSeconds = Math.floor(durationMs / 1000);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, '0');
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+
+  return `${minutes}:${seconds}`;
+}
+
+function getLatencyGrade(latencyMs) {
+  if (!latencyMs) {
+    return '待机';
+  }
+
+  return latencyMs <= 1200 ? '优秀' : '良好';
+}
+
+function RealtimeStatusPanel({ isListening, playbackOffsetMs }) {
+  const realtimeStatus = getMockRealtimeStatus(playbackOffsetMs);
+  const metrics = [
+    {
+      label: '延迟',
+      value: isListening ? `${(realtimeStatus.latencyMs / 1000).toFixed(1)} 秒` : '--',
+      grade: getLatencyGrade(realtimeStatus.latencyMs)
+    },
+    {
+      label: '准确率',
+      value: isListening ? `${realtimeStatus.accuracy.toFixed(1)}%` : '--',
+      grade: isListening ? '模拟' : '待机'
+    },
+    {
+      label: '已翻译时长',
+      value: formatDuration(realtimeStatus.translatedDurationMs),
+      grade: isListening ? '进行中' : '待机'
+    }
+  ];
+
   return (
     <section className="realtime-status-panel" aria-labelledby="realtime-status-title">
       <div className="status-panel-header">

@@ -71,6 +71,29 @@ export const mockSubtitleEvents = [
   }
 ];
 
+export const mockRealtimeStatusSamples = [
+  { offsetMs: 0, latencyMs: 0, accuracy: 0 },
+  { offsetMs: 600, latencyMs: 1320, accuracy: 94.2 },
+  { offsetMs: 1600, latencyMs: 1180, accuracy: 95.6 },
+  { offsetMs: 2600, latencyMs: 1060, accuracy: 96.1 },
+  { offsetMs: 3800, latencyMs: 970, accuracy: 96.8 },
+  { offsetMs: 5000, latencyMs: 1030, accuracy: 96.4 },
+  { offsetMs: 6200, latencyMs: 920, accuracy: 97.2 },
+  { offsetMs: 7600, latencyMs: 880, accuracy: 97.4 }
+];
+
 export function getMockSubtitleEvents() {
   return mockSubtitleEvents.map((event) => ({ ...event }));
+}
+
+export function getMockRealtimeStatus(offsetMs) {
+  const safeOffsetMs = Math.max(0, offsetMs);
+  const currentSample = [...mockRealtimeStatusSamples]
+    .reverse()
+    .find((sample) => sample.offsetMs <= safeOffsetMs);
+
+  return {
+    ...(currentSample ?? mockRealtimeStatusSamples[0]),
+    translatedDurationMs: safeOffsetMs
+  };
 }

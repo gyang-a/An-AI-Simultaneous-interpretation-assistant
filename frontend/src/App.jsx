@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
 import QuickActionsPanel from './components/QuickActionsPanel';
@@ -11,11 +11,21 @@ import { getMockSubtitleEvents } from './mocks/subtitleEvents';
 function App() {
   const [isListening, setIsListening] = useState(false);
   const [subtitleItems, setSubtitleItems] = useState([]);
+  const [playbackOffsetMs, setPlaybackOffsetMs] = useState(0);
   const playbackTimersRef = useRef([]);
+  const playbackStartedAtRef = useRef(0);
+  const statusTimerRef = useRef(null);
 
   const clearPlaybackTimers = () => {
     playbackTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
     playbackTimersRef.current = [];
+  };
+
+  const clearStatusTimer = () => {
+    if (statusTimerRef.current) {
+      window.clearInterval(statusTimerRef.current);
+      statusTimerRef.current = null;
+    }
   };
 
   const applySubtitleEvent = (event) => {
@@ -42,12 +52,20 @@ function App() {
 
   const handleStartListening = () => {
     clearPlaybackTimers();
+    clearStatusTimer();
     setSubtitleItems([]);
+    setPlaybackOffsetMs(0);
     setIsListening(true);
+    playbackStartedAtRef.current = window.performance.now();
+
+    statusTimerRef.current = window.setInterval(() => {
+      setPlaybackOffsetMs(window.performance.now() - playbackStartedAtRef.current);
+    }, 500);
 
     const events = getMockSubtitleEvents();
     playbackTimersRef.current = events.map((event) =>
       window.setTimeout(() => {
+        setPlaybackOffsetMs(event.offsetMs);
         applySubtitleEvent(event);
       }, event.offsetMs)
     );
@@ -57,6 +75,8 @@ function App() {
       const stopTimerId = window.setTimeout(() => {
         setIsListening(false);
         clearPlaybackTimers();
+        clearStatusTimer();
+        setPlaybackOffsetMs(lastEvent.offsetMs);
       }, lastEvent.offsetMs + 700);
 
       playbackTimersRef.current.push(stopTimerId);
@@ -65,8 +85,16 @@ function App() {
 
   const handleStopListening = () => {
     clearPlaybackTimers();
+    clearStatusTimer();
     setIsListening(false);
   };
+
+  useEffect(() => {
+    return () => {
+      clearPlaybackTimers();
+      clearStatusTimer();
+    };
+  }, []);
 
   return (
     <main className="app-shell">
@@ -85,7 +113,10 @@ function App() {
           </div>
           <div className="side-column">
             <InputSourcePanel />
-            <RealtimeStatusPanel />
+            <RealtimeStatusPanel
+              isListening={isListening}
+              playbackOffsetMs={playbackOffsetMs}
+            />
             <QuickActionsPanel />
           </div>
         </div>
