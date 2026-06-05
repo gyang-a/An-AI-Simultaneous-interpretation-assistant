@@ -12,6 +12,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - 前端实时状态面板使用 Mock 指标联动展示延迟、准确率和已翻译时长
 - 前端监听状态、字幕列表和播放进度已接入 Zustand 全局状态管理
 - 后端已接入 Mock AI 转写与翻译 Provider，用于封装模拟字幕事件输出
+- 后端已提供 AI Provider 选择入口，当前默认使用 `mock`
 
 ## 技术栈
 
@@ -31,6 +32,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 - CORS：允许前端开发服务器访问后端接口
 - ws：提供 WebSocket 服务，当前用于推送 Mock 字幕事件并接收前端音频 chunk
 - Mock AI Provider：封装模拟转写、翻译和修正事件输出，后续可替换为真实 AI Provider
+- AI Provider Factory：根据环境变量选择后端 AI Provider，当前支持 `mock`
 
 ### 数据与通信
 
@@ -80,13 +82,23 @@ npm run dev
 - `/api` -> `http://localhost:3001`
 - `/ws` -> `ws://localhost:3001`
 
+可选环境变量：
+
+- `PORT`：后端服务端口，默认 `3001`
+- `AI_PROVIDER`：后端 AI Provider，当前支持 `mock`，默认 `mock`
+
 ## 目录结构
 
 ```text
 .
 ├── backend
+│   ├── config
+│   │   └── aiProviderConfig.js
 │   ├── mocks
 │   │   └── subtitleEvents.js
+│   ├── providers
+│   │   ├── aiTranslationProviderFactory.js
+│   │   └── mockAiTranslationProvider.js
 │   ├── routes
 │   │   └── healthRoutes.js
 │   ├── websocket
@@ -141,6 +153,7 @@ PR 描述必须包含：
 10. 添加麦克风采集入口
 11. 添加前端监听状态全局管理
 12. 接入 Mock AI 转写与翻译 Provider
+13. 添加 AI Provider 选择入口
 
 ## 后续计划
 

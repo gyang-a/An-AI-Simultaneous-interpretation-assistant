@@ -1,5 +1,5 @@
 import { WebSocketServer } from 'ws';
-import { createMockAiTranslationSession } from '../providers/mockAiTranslationProvider.js';
+import { createAiTranslationSession } from '../providers/aiTranslationProviderFactory.js';
 
 const SUBTITLE_SOCKET_PATH = '/ws/subtitles';
 const SOCKET_CONTROL_TYPES = {
@@ -20,7 +20,7 @@ export function attachSubtitleSocket(server) {
   });
 
   subtitleSocketServer.on('connection', (socket) => {
-    const translationSession = createMockAiTranslationSession({
+    const translationSession = createAiTranslationSession({
       onSubtitleEvent: (event) => {
         sendJson(socket, event);
       }
