@@ -53,6 +53,7 @@ export const mockSubtitleEvents = [
   {
     type: SUBTITLE_EVENT_TYPES.REVISION,
     segmentId: 'seg-002',
+    revisionOf: 'seg-002',
     offsetMs: 6200,
     time: '00:00:05',
     sourceText: 'It can improve productivity and automate routine tasks,',

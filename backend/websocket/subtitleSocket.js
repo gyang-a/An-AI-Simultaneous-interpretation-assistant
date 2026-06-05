@@ -23,6 +23,12 @@ export function attachSubtitleSocket(server) {
     const translationSession = createAiTranslationSession({
       onSubtitleEvent: (event) => {
         sendJson(socket, event);
+      },
+      onError: (error) => {
+        sendJson(socket, {
+          type: 'error',
+          message: error.message
+        });
       }
     });
 

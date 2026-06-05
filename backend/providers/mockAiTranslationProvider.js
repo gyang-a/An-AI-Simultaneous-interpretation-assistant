@@ -1,6 +1,7 @@
 import { getMockSubtitleEvents } from '../mocks/subtitleEvents.js';
+import { normalizeSubtitleEvent } from '../contracts/subtitleEventContract.js';
 
-export function createMockAiTranslationSession({ onSubtitleEvent }) {
+export function createMockAiTranslationSession({ onSubtitleEvent, onError }) {
   const timers = [];
   const audioSession = {
     chunkCount: 0,
@@ -15,7 +16,11 @@ export function createMockAiTranslationSession({ onSubtitleEvent }) {
 
     getMockSubtitleEvents().forEach((event) => {
       const timerId = setTimeout(() => {
-        onSubtitleEvent(event);
+        try {
+          onSubtitleEvent(normalizeSubtitleEvent(event));
+        } catch (error) {
+          onError?.(error);
+        }
       }, event.offsetMs);
 
       timers.push(timerId);

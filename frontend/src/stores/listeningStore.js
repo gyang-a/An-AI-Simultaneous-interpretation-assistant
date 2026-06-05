@@ -1,13 +1,17 @@
 import { create } from 'zustand';
 
 function createSubtitleItem(event) {
+  const targetSegmentId = event.revisionOf || event.segmentId;
+
   return {
-    id: event.segmentId,
+    id: targetSegmentId,
+    eventId: event.segmentId,
     time: event.time,
     source: event.sourceText,
     translation: event.translatedText,
     status: event.status,
     type: event.type,
+    revisionOf: event.revisionOf,
     revisionReason: event.revisionReason
   };
 }
@@ -26,7 +30,8 @@ export const useListeningStore = create((set) => ({
   applySubtitleEvent: (event) =>
     set((state) => {
       const nextItem = createSubtitleItem(event);
-      const itemIndex = state.subtitleItems.findIndex((item) => item.id === event.segmentId);
+      const targetSegmentId = event.revisionOf || event.segmentId;
+      const itemIndex = state.subtitleItems.findIndex((item) => item.id === targetSegmentId);
       const subtitleItems =
         itemIndex === -1
           ? [...state.subtitleItems, nextItem]

@@ -38,7 +38,7 @@ AI 同声传译助手面向英语演讲、技术分享、国际会议和网课�
 
 - HTTP API：当前提供 `/api/health` 健康检查
 - WebSocket：当前提供 `/ws/subtitles`，用于字幕事件下行和音频数据上行
-- Mock 字幕事件：包含 `partial`、`final`、`revision` 三类事件，字幕修正通过 `segmentId` 替换旧字幕
+- Mock 字幕事件：包含 `partial`、`final`、`revision` 三类事件，字幕修正通过 `revisionOf` 指向被修正片段，并兼容使用 `segmentId` 替换旧字幕
 
 ### 开发工具
 
@@ -154,6 +154,7 @@ PR 描述必须包含：
 11. 添加前端监听状态全局管理
 12. 接入 Mock AI 转写与翻译 Provider
 13. 添加 AI Provider 选择入口
+14. 完善字幕修正事件契约
 
 ## 后续计划
 
