@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import authRoutes from './routes/authRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import translationHistoryRoutes from './routes/translationHistoryRoutes.js';
+import userProfileRoutes from './routes/userProfileRoutes.js';
 import { attachSubtitleSocket, SUBTITLE_SOCKET_PATH } from './websocket/subtitleSocket.js';
 
 const app = express();
@@ -15,10 +16,11 @@ app.use(cors({
   origin: true,
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '512kb' }));
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
 app.use('/api', translationHistoryRoutes);
+app.use('/api', userProfileRoutes);
 
 attachSubtitleSocket(server);
 

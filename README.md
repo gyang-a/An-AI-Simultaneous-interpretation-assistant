@@ -8,6 +8,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - 登录后进入实时翻译主界面，支持输入源选择、开始/停止监听、实时字幕展示、快捷复制和清空。
 - 翻译记录按登录用户存储在 MongoDB，前端只保留当前页面内存副本。
 - 左侧历史记录入口支持按会话查看已保存的翻译记录和字幕详情，并可右键删除单条历史记录。
+- 左侧设置区支持上传用户头像，头像会压缩后保存到当前用户资料中。
 - 后端提供健康检查、字幕 WebSocket 服务和账号认证 API。
 - 后端认证模块已按 `config`、`database`、`repositories`、`services`、`middleware`、`routes` 拆分，避免业务逻辑堆在 `server.js`。
 
@@ -21,6 +22,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - Zustand：管理监听状态、字幕列表、播放进度和翻译记录。
 - Web Audio API：采集麦克风或系统音频，并转换为后端可处理的音频 chunk。
 - WebSocket：接收后端字幕事件，并上传音频控制消息与音频数据。
+- Canvas API：在浏览器内裁剪并压缩用户头像，减少上传和数据库存储体积。
 - `localStorage`：当前只缓存用户信息和 Access Token；Refresh Token 由后端写入 HttpOnly Cookie。
 - 前端认证客户端：封装注册、登录、刷新 Token、退出登录和获取当前用户请求，统一管理本地登录态缓存。
 
@@ -46,6 +48,12 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - `POST /api/auth/refresh`：使用 Cookie 中的 Refresh Token 换取新的 Access Token，并轮换 Refresh Token Cookie。
 - `POST /api/auth/logout`：撤销当前 Refresh Token，并清理 Refresh Token Cookie。
 - `GET /api/auth/me`：通过 `Authorization: Bearer <accessToken>` 获取当前用户。
+
+## 用户资料 API
+
+用户资料接口统一挂载在 `/api/users/me` 下，并要求携带 Access Token：
+
+- `PATCH /api/users/me/avatar`：上传并更新当前用户头像，头像以压缩后的图片 Data URL 保存。
 
 ## 翻译记录 API
 
@@ -181,6 +189,7 @@ npm run dev
 │   ├── index.html
 │   ├── vite.config.js
 │   └── src
+|       |——main.jsx
 │       ├── App.jsx
 │       ├── components
 │       ├── services
@@ -203,5 +212,5 @@ npm run dev
 1. 前端登录页接入后端认证 API。
 2. 增加 Access Token 过期后的自动刷新逻辑。
 3. 增加历史记录搜索、分页和按日期筛选。
-4. 实现字幕记录页面，支持跨会话检索单条字幕片段。
+4. 完善用户资料设置，支持昵称编辑等轻量账号信息维护。
 5. 增加记录保存失败时的用户提示和重试入口。

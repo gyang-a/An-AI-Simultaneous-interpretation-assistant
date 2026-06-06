@@ -30,6 +30,7 @@ function sanitizeUser(user) {
     id: user.id,
     name: user.name,
     account: user.account,
+    avatarDataUrl: user.avatarDataUrl || '',
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
   };

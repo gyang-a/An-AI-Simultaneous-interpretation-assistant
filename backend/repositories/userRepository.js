@@ -29,6 +29,7 @@ function mapUser(user) {
     id: user._id.toString(),
     name: user.name,
     account: user.account,
+    avatarDataUrl: user.avatarDataUrl || '',
     passwordHash: user.passwordHash,
     createdAt: user.createdAt,
     updatedAt: user.updatedAt
@@ -60,5 +61,26 @@ export async function findUserById(userId) {
   }
 
   const collection = await getUsersCollection();
+  return mapUser(await collection.findOne({ _id: new ObjectId(userId) }));
+}
+
+export async function updateUserAvatar(userId, avatarDataUrl) {
+  if (!ObjectId.isValid(userId)) {
+    return null;
+  }
+
+  const collection = await getUsersCollection();
+  const now = new Date();
+
+  await collection.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $set: {
+        avatarDataUrl,
+        updatedAt: now
+      }
+    }
+  );
+
   return mapUser(await collection.findOne({ _id: new ObjectId(userId) }));
 }
