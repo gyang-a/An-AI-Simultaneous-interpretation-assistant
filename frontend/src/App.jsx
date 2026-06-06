@@ -58,9 +58,15 @@ function App() {
     }
 
     try {
-      await saveTranslationHistoryRecord(historyItem);
+      const savedHistoryItem = await saveTranslationHistoryRecord(historyItem);
+      if (savedHistoryItem) {
+        setTranslationHistory([
+          savedHistoryItem,
+          ...translationHistory.filter((item) => item.id !== savedHistoryItem.id)
+        ]);
+      }
     } catch (error) {
-      // 记录保存失败不影响实时监听流程，用户仍能继续使用当前字幕。
+      console.error('翻译记录保存失败', error);
     }
   };
 
@@ -70,7 +76,7 @@ function App() {
     try {
       await clearTranslationHistoryRecords();
     } catch (error) {
-      // 清空失败时保持前端已清空状态，下一次登录后会重新以数据库为准。
+      console.error('翻译记录清空失败', error);
     }
   };
 
@@ -213,10 +219,8 @@ function App() {
           setTranslationHistory(historyItems);
         }
       })
-      .catch(() => {
-        if (isActive) {
-          setTranslationHistory([]);
-        }
+      .catch((error) => {
+        console.error('翻译记录加载失败', error);
       });
 
     return () => {
