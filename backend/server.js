@@ -2,6 +2,7 @@ import 'dotenv/config';
 import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
+import authRoutes from './routes/authRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import { attachSubtitleSocket, SUBTITLE_SOCKET_PATH } from './websocket/subtitleSocket.js';
 
@@ -12,6 +13,7 @@ const server = createServer(app);
 app.use(cors());
 app.use(express.json());
 app.use('/api', healthRoutes);
+app.use('/api', authRoutes);
 
 attachSubtitleSocket(server);
 
