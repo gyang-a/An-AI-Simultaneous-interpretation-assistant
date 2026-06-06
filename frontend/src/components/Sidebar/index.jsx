@@ -1,12 +1,12 @@
 import './Sidebar.less';
 
 const navItems = [
-  { label: '实时翻译', icon: 'RT' },
-  { label: '历史记录', icon: 'HI' },
-  { label: '字幕记录', icon: 'CC' }
+  { id: 'realtime', label: '实时翻译', icon: 'RT' },
+  { id: 'history', label: '历史记录', icon: 'HI' },
+  { id: 'captions', label: '字幕记录', icon: 'CC', disabled: true }
 ];
 
-function Sidebar({ onLogout }) {
+function Sidebar({ activeView, onSelectView, onLogout }) {
   return (
     <aside className="sidebar" aria-label="主导航">
       <div className="brand">
@@ -20,11 +20,13 @@ function Sidebar({ onLogout }) {
       </div>
 
       <nav className="nav-list" aria-label="功能导航">
-        {navItems.map((item, index) => (
+        {navItems.map((item) => (
           <button
-            className={index === 0 ? 'nav-item active' : 'nav-item'}
+            className={item.id === activeView ? 'nav-item active' : 'nav-item'}
+            disabled={item.disabled}
             type="button"
-            key={item.label}
+            key={item.id}
+            onClick={() => onSelectView(item.id)}
           >
             <span className="nav-icon" aria-hidden="true">
               {item.icon}

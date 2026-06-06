@@ -1,11 +1,11 @@
 import './Topbar.less';
 
-function Topbar() {
+function Topbar({ title = '实时翻译', description = '实时监听外部声音并翻译，帮助你跟上演讲、会议和网课内容。' }) {
   return (
     <header className="topbar">
       <div>
-        <h1 id="page-title">实时翻译</h1>
-        <p>实时监听外部声音并翻译，帮助你跟上演讲、会议和网课内容。</p>
+        <h1 id="page-title">{title}</h1>
+        <p>{description}</p>
       </div>
 
       <div className="topbar-actions">
