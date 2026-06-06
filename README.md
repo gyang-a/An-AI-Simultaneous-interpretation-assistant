@@ -118,6 +118,7 @@ npm run dev
 
 - `MONGODB_URI`：MongoDB 连接地址。
 - `MONGODB_DB_NAME`：MongoDB 数据库名称，默认 `ai_interpreter`。
+- `MONGODB_SERVER_SELECTION_TIMEOUT_MS`：MongoDB 连接选择超时时间，默认 `5000`。
 - `ACCESS_TOKEN_SECRET`：Access Token JWT 签名密钥。
 - `REFRESH_TOKEN_SECRET`：预留的 Refresh Token 密钥配置。
 - `ACCESS_TOKEN_TTL`：Access Token 有效期，默认 `15m`。
