@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { getAuthConfig } from '../config/authConfig.js';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import {
   getCurrentUser,
@@ -10,12 +11,59 @@ import {
 
 const router = Router();
 
+function getRefreshTokenCookieOptions() {
+  const config = getAuthConfig();
+
+  return {
+    httpOnly: true,
+    secure: config.refreshTokenCookieSecure,
+    sameSite: config.refreshTokenCookieSameSite,
+    path: config.refreshTokenCookiePath,
+    maxAge: config.refreshTokenTtlDays * 24 * 60 * 60 * 1000
+  };
+}
+
+function readCookie(req, name) {
+  const cookies = String(req.headers.cookie || '').split(';');
+  const targetCookie = cookies.find((cookie) => cookie.trim().startsWith(`${name}=`));
+
+  return targetCookie ? decodeURIComponent(targetCookie.split('=').slice(1).join('=')) : '';
+}
+
+function readRefreshTokenCookie(req) {
+  return readCookie(req, getAuthConfig().refreshTokenCookieName);
+}
+
+function setRefreshTokenCookie(res, payload) {
+  if (!payload.refreshToken) {
+    return;
+  }
+
+  // RT 只写入 HttpOnly Cookie，避免前端 JS 读取后被 XSS 窃取。
+  res.cookie(
+    getAuthConfig().refreshTokenCookieName,
+    payload.refreshToken,
+    getRefreshTokenCookieOptions()
+  );
+}
+
+function clearRefreshTokenCookie(res) {
+  const config = getAuthConfig();
+
+  res.clearCookie(config.refreshTokenCookieName, {
+    path: config.refreshTokenCookiePath,
+    secure: config.refreshTokenCookieSecure,
+    sameSite: config.refreshTokenCookieSameSite
+  });
+}
+
 function sendAuthResponse(res, payload) {
+  setRefreshTokenCookie(res, payload);
+
   res.json({
     user: payload.user,
     tokens: {
       accessToken: payload.accessToken,
-      refreshToken: payload.refreshToken,
       refreshTokenExpiresAt: payload.refreshTokenExpiresAt
     }
   });
@@ -63,12 +111,13 @@ router.post('/auth/login', asyncRoute(async (req, res) => {
 }));
 
 router.post('/auth/refresh', asyncRoute(async (req, res) => {
-  const payload = await refreshUserToken(req.body.refreshToken);
+  const payload = await refreshUserToken(readRefreshTokenCookie(req));
   sendAuthResponse(res, payload);
 }));
 
 router.post('/auth/logout', asyncRoute(async (req, res) => {
-  const payload = await logoutUser(req.body.refreshToken);
+  const payload = await logoutUser(readRefreshTokenCookie(req));
+  clearRefreshTokenCookie(res);
   res.json(payload);
 }));
 

@@ -1,6 +1,5 @@
 import {
   getAccessToken,
-  getRefreshToken,
   saveAuthSession
 } from './authStorage';
 
@@ -27,6 +26,7 @@ async function requestAuthApi(path, { method = 'GET', body, accessToken } = {}) 
   const response = await fetch(`${AUTH_API_BASE}${path}`, {
     method,
     headers,
+    credentials: 'include',
     body: body ? JSON.stringify(body) : undefined
   });
   const payload = await parseJsonResponse(response);
@@ -42,8 +42,8 @@ async function requestAuthApi(path, { method = 'GET', body, accessToken } = {}) 
 }
 
 function persistAuthPayload(payload) {
-  if (payload?.tokens?.accessToken && payload?.tokens?.refreshToken) {
-    // 后端返回的双 Token 统一在这里落本地，页面层只关心登录结果。
+  if (payload?.tokens?.accessToken) {
+    // 前端只持久化 AT；RT 通过 HttpOnly Cookie 自动随请求发送。
     saveAuthSession(payload);
   }
 
@@ -68,19 +68,17 @@ export async function loginAuthUser({ account, password }) {
   return persistAuthPayload(payload);
 }
 
-export async function refreshAuthSession(refreshToken = getRefreshToken()) {
+export async function refreshAuthSession() {
   const payload = await requestAuthApi('/refresh', {
-    method: 'POST',
-    body: { refreshToken }
+    method: 'POST'
   });
 
   return persistAuthPayload(payload);
 }
 
-export async function logoutAuthUser(refreshToken = getRefreshToken()) {
+export async function logoutAuthUser() {
   return requestAuthApi('/logout', {
-    method: 'POST',
-    body: { refreshToken }
+    method: 'POST'
   });
 }
 

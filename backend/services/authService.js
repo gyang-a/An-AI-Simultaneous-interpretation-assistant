@@ -2,7 +2,10 @@ import bcrypt from 'bcryptjs';
 import { getAuthConfig } from '../config/authConfig.js';
 import {
   createRefreshTokenRecord,
-  findActiveRefreshToken,
+  findRefreshTokenByHash,
+  isRefreshTokenRecordActive,
+  markRefreshTokenReuse,
+  revokeActiveRefreshTokensByUserId,
   revokeRefreshToken
 } from '../repositories/refreshTokenRepository.js';
 import {
@@ -104,10 +107,17 @@ export async function refreshUserToken(refreshToken) {
   }
 
   const tokenHash = hashRefreshToken(refreshToken);
-  const tokenRecord = await findActiveRefreshToken(tokenHash);
+  const tokenRecord = await findRefreshTokenByHash(tokenHash);
 
   if (!tokenRecord) {
     throw createAuthError('Invalid refresh token', 401);
+  }
+
+  if (!isRefreshTokenRecordActive(tokenRecord)) {
+    // 旧 RT 再次出现时说明 Cookie 可能被盗用，标记复用并撤销该用户剩余白名单 RT。
+    await markRefreshTokenReuse(tokenHash);
+    await revokeActiveRefreshTokensByUserId(tokenRecord.userId);
+    throw createAuthError('Refresh token reuse detected', 401);
   }
 
   const user = await findUserById(tokenRecord.userId);
@@ -115,8 +125,10 @@ export async function refreshUserToken(refreshToken) {
     throw createAuthError('User not found', 401);
   }
 
-  await revokeRefreshToken(tokenHash);
   const tokens = await issueTokenPair(user);
+  await revokeRefreshToken(tokenHash, {
+    replacedByTokenHash: hashRefreshToken(tokens.refreshToken)
+  });
 
   return {
     user: sanitizeUser(user),

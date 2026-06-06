@@ -27,3 +27,13 @@ export async function getDatabase() {
   const client = await clientPromise;
   return client.db(config.dbName);
 }
+
+export async function closeDatabaseClient() {
+  if (!clientPromise) {
+    return;
+  }
+
+  const client = await clientPromise;
+  await client.close();
+  clientPromise = null;
+}
