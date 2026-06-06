@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './HistoryPage.less';
 
 function formatDateTime(value) {
@@ -39,8 +39,9 @@ function getRecordSummary(record) {
     .join(' / ') || '暂无字幕内容';
 }
 
-function HistoryPage({ historyItems }) {
+function HistoryPage({ historyItems, onDeleteHistoryRecord }) {
   const [selectedRecordId, setSelectedRecordId] = useState('');
+  const [contextMenu, setContextMenu] = useState(null);
   const selectedRecord = useMemo(() => {
     if (!historyItems.length) {
       return null;
@@ -48,6 +49,37 @@ function HistoryPage({ historyItems }) {
 
     return historyItems.find((record) => record.id === selectedRecordId) || historyItems[0];
   }, [historyItems, selectedRecordId]);
+
+  useEffect(() => {
+    const closeContextMenu = () => setContextMenu(null);
+
+    window.addEventListener('click', closeContextMenu);
+    window.addEventListener('keydown', closeContextMenu);
+
+    return () => {
+      window.removeEventListener('click', closeContextMenu);
+      window.removeEventListener('keydown', closeContextMenu);
+    };
+  }, []);
+
+  const openContextMenu = (event, record) => {
+    event.preventDefault();
+    setSelectedRecordId(record.id);
+    setContextMenu({
+      recordId: record.id,
+      x: event.clientX,
+      y: event.clientY
+    });
+  };
+
+  const handleDeleteRecord = async () => {
+    if (!contextMenu?.recordId) {
+      return;
+    }
+
+    await onDeleteHistoryRecord(contextMenu.recordId);
+    setContextMenu(null);
+  };
 
   if (!historyItems.length) {
     return (
@@ -81,6 +113,7 @@ function HistoryPage({ historyItems }) {
                   className={isActive ? 'history-record-button active' : 'history-record-button'}
                   type="button"
                   onClick={() => setSelectedRecordId(record.id)}
+                  onContextMenu={(event) => openContextMenu(event, record)}
                 >
                   <span>{formatDateTime(record.startedAt)}</span>
                   <strong>{record.items.length} 条字幕</strong>
@@ -118,6 +151,18 @@ function HistoryPage({ historyItems }) {
           </article>
         )}
       </div>
+
+      {contextMenu && (
+        <div
+          className="history-context-menu"
+          style={{ left: contextMenu.x, top: contextMenu.y }}
+          role="menu"
+        >
+          <button type="button" role="menuitem" onClick={handleDeleteRecord}>
+            删除记录
+          </button>
+        </div>
+      )}
     </section>
   );
 }

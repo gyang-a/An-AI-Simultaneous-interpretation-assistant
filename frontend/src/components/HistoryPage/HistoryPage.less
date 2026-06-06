@@ -195,6 +195,33 @@
   text-align: center;
 }
 
+.history-context-menu {
+  position: fixed;
+  z-index: 20;
+  min-width: 120px;
+  padding: 6px;
+  border: 1px solid rgba(205, 214, 232, 0.78);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 18px 44px rgba(89, 103, 159, 0.18);
+}
+
+.history-context-menu button {
+  width: 100%;
+  min-height: 34px;
+  border: 0;
+  border-radius: 6px;
+  color: #b42318;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+}
+
+.history-context-menu button:hover {
+  background: rgba(254, 242, 242, 0.9);
+}
+
 @media (max-width: 920px) {
   .history-page-grid {
     grid-template-columns: 1fr;

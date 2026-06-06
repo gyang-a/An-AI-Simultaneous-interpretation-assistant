@@ -45,7 +45,10 @@ export const useListeningStore = create((set, get) => ({
         ? translationHistory.slice(0, MAX_TRANSLATION_HISTORY)
         : []
     }),
-  clearTranslationHistory: () => set({ translationHistory: [] }),
+  removeTranslationHistoryItem: (historyItemId) =>
+    set((state) => ({
+      translationHistory: state.translationHistory.filter((item) => item.id !== historyItemId)
+    })),
   archiveCurrentSession: () => {
     const state = get();
     const items = state.subtitleItems.filter((item) => item.source || item.translation);

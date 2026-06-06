@@ -16,7 +16,7 @@ function formatRecordTime(value) {
   });
 }
 
-function SubtitlePanel({ items, isListening, historyItems, onClearHistory }) {
+function SubtitlePanel({ items, isListening, historyItems }) {
   const [activeView, setActiveView] = useState('realtime');
   const hasItems = items.length > 0;
   const hasHistory = historyItems.length > 0;
@@ -59,17 +59,6 @@ function SubtitlePanel({ items, isListening, historyItems, onClearHistory }) {
             翻译记录
           </button>
         </div>
-
-        {!isRealtimeView && (
-          <button
-            className="history-clear-button"
-            disabled={!hasHistory}
-            type="button"
-            onClick={onClearHistory}
-          >
-            清空记录
-          </button>
-        )}
       </div>
 
       {isRealtimeView && hasItems ? (

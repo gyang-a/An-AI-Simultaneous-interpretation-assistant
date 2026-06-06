@@ -13,7 +13,7 @@ import {
   createSystemAudioCapture
 } from './services/microphoneCapture';
 import {
-  clearTranslationHistoryRecords,
+  deleteTranslationHistoryRecord,
   fetchTranslationHistory,
   saveTranslationHistoryRecord
 } from './services/translationHistoryApi';
@@ -37,7 +37,7 @@ function App() {
   const setIsListening = useListeningStore((state) => state.setIsListening);
   const resetListeningSession = useListeningStore((state) => state.resetListeningSession);
   const clearSubtitleItems = useListeningStore((state) => state.clearSubtitleItems);
-  const clearTranslationHistory = useListeningStore((state) => state.clearTranslationHistory);
+  const removeTranslationHistoryItem = useListeningStore((state) => state.removeTranslationHistoryItem);
   const setTranslationHistory = useListeningStore((state) => state.setTranslationHistory);
   const archiveCurrentSession = useListeningStore((state) => state.archiveCurrentSession);
   const setPlaybackOffsetMs = useListeningStore((state) => state.setPlaybackOffsetMs);
@@ -72,13 +72,12 @@ function App() {
     }
   };
 
-  const handleClearTranslationHistory = async () => {
-    clearTranslationHistory();
-
+  const handleDeleteHistoryRecord = async (historyItemId) => {
     try {
-      await clearTranslationHistoryRecords();
+      await deleteTranslationHistoryRecord(historyItemId);
+      removeTranslationHistoryItem(historyItemId);
     } catch (error) {
-      console.error('翻译记录清空失败', error);
+      console.error('历史记录删除失败', error);
     }
   };
 
@@ -249,7 +248,10 @@ function App() {
               title="历史记录"
               description="按会话查看已经保存到数据库的翻译记录。"
             />
-            <HistoryPage historyItems={translationHistory} />
+            <HistoryPage
+              historyItems={translationHistory}
+              onDeleteHistoryRecord={handleDeleteHistoryRecord}
+            />
           </>
         ) : (
           <>
@@ -265,7 +267,6 @@ function App() {
                   items={subtitleItems}
                   isListening={isListening}
                   historyItems={translationHistory}
-                  onClearHistory={handleClearTranslationHistory}
                 />
               </div>
               <div className="side-column">

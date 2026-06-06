@@ -1,5 +1,5 @@
 import {
-  clearTranslationHistoryByUserId,
+  deleteTranslationHistoryBySessionId,
   listTranslationHistoryByUserId,
   upsertTranslationHistoryRecord
 } from '../repositories/translationHistoryRepository.js';
@@ -59,7 +59,15 @@ export async function saveUserTranslationHistory(userId, payload) {
   });
 }
 
-export async function clearUserTranslationHistory(userId) {
-  await clearTranslationHistoryByUserId(userId);
+export async function deleteUserTranslationHistory(userId, sessionId) {
+  if (!sessionId) {
+    throw createHistoryError('History session id is required', 400);
+  }
+
+  const didDelete = await deleteTranslationHistoryBySessionId(userId, sessionId);
+  if (!didDelete) {
+    throw createHistoryError('History record not found', 404);
+  }
+
   return { success: true };
 }

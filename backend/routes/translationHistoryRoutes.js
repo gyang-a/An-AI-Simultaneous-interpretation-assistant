@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../middleware/authMiddleware.js';
 import {
-  clearUserTranslationHistory,
+  deleteUserTranslationHistory,
   listUserTranslationHistory,
   saveUserTranslationHistory
 } from '../services/translationHistoryService.js';
@@ -39,8 +39,8 @@ router.post('/translation-history', requireAuth, asyncRoute(async (req, res) => 
   res.status(201).json({ historyItem });
 }));
 
-router.delete('/translation-history', requireAuth, asyncRoute(async (req, res) => {
-  const payload = await clearUserTranslationHistory(req.user.id);
+router.delete('/translation-history/:sessionId', requireAuth, asyncRoute(async (req, res) => {
+  const payload = await deleteUserTranslationHistory(req.user.id, req.params.sessionId);
   res.json(payload);
 }));
 
