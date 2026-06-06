@@ -1,17 +1,76 @@
 import { useState } from 'react';
+import {
+  loginAuthUser,
+  registerAuthUser
+} from '../../services/authApi';
 import './AuthPage.less';
+
+const INITIAL_FORM = {
+  name: '',
+  account: '',
+  password: ''
+};
+
+function getAuthErrorMessage(error) {
+  if (error.status === 409) {
+    return '这个账号已经注册过，请直接登录。';
+  }
+
+  if (error.status === 401) {
+    return '账号或密码不正确，请检查后重试。';
+  }
+
+  if (error.status === 503) {
+    return '数据库暂未配置或未连接，请确认 MongoDB 已启动并检查 .env。';
+  }
+
+  return error.message || '认证请求失败，请稍后重试。';
+}
 
 function AuthPage({ onAuthenticated }) {
   const [authMode, setAuthMode] = useState('login');
+  const [form, setForm] = useState(INITIAL_FORM);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const isLogin = authMode === 'login';
 
-  const handleSubmit = (event) => {
+  const updateFormField = (field, value) => {
+    setForm((currentForm) => ({
+      ...currentForm,
+      [field]: value
+    }));
+  };
+
+  const switchAuthMode = (nextMode) => {
+    setAuthMode(nextMode);
+    setErrorMessage('');
+  };
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    onAuthenticated({
-      name: isLogin ? 'AI User' : 'New User',
-      signedInAt: new Date().toISOString()
-    });
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      const session = isLogin
+        ? await loginAuthUser({
+            account: form.account,
+            password: form.password
+          })
+        : await registerAuthUser({
+            name: form.name,
+            account: form.account,
+            password: form.password
+          });
+
+      onAuthenticated(session);
+    } catch (error) {
+      // 后端错误在这里转成用户能理解的中文提示，避免页面直接暴露技术细节。
+      setErrorMessage(getAuthErrorMessage(error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -87,7 +146,7 @@ function AuthPage({ onAuthenticated }) {
               type="button"
               role="tab"
               aria-selected={isLogin}
-              onClick={() => setAuthMode('login')}
+              onClick={() => switchAuthMode('login')}
             >
               登录
             </button>
@@ -96,7 +155,7 @@ function AuthPage({ onAuthenticated }) {
               type="button"
               role="tab"
               aria-selected={!isLogin}
-              onClick={() => setAuthMode('register')}
+              onClick={() => switchAuthMode('register')}
             >
               注册
             </button>
@@ -110,13 +169,26 @@ function AuthPage({ onAuthenticated }) {
           {!isLogin && (
             <label className="auth-field">
               <span>用户昵称</span>
-              <input type="text" placeholder="请输入昵称" autoComplete="name" />
+              <input
+                type="text"
+                placeholder="请输入昵称"
+                autoComplete="name"
+                value={form.name}
+                onChange={(event) => updateFormField('name', event.target.value)}
+              />
             </label>
           )}
 
           <label className="auth-field">
             <span>账号</span>
-            <input type="text" placeholder="邮箱或手机号" autoComplete="username" />
+            <input
+              type="text"
+              placeholder="邮箱或手机号"
+              autoComplete="username"
+              value={form.account}
+              onChange={(event) => updateFormField('account', event.target.value)}
+              required
+            />
           </label>
 
           <label className="auth-field password-field">
@@ -125,6 +197,9 @@ function AuthPage({ onAuthenticated }) {
               type={isPasswordVisible ? 'text' : 'password'}
               placeholder="密码"
               autoComplete={isLogin ? 'current-password' : 'new-password'}
+              value={form.password}
+              onChange={(event) => updateFormField('password', event.target.value)}
+              required
             />
             <button
               type="button"
@@ -135,6 +210,12 @@ function AuthPage({ onAuthenticated }) {
             </button>
           </label>
 
+          {errorMessage && (
+            <div className="auth-error" role="alert">
+              {errorMessage}
+            </div>
+          )}
+
           <div className="auth-options">
             <label>
               <input type="checkbox" defaultChecked />
@@ -143,8 +224,8 @@ function AuthPage({ onAuthenticated }) {
             {isLogin && <button type="button">忘记密码?</button>}
           </div>
 
-          <button className="auth-submit" type="submit">
-            {isLogin ? '登录' : '注册'}
+          <button className="auth-submit" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? '处理中...' : (isLogin ? '登录' : '注册')}
           </button>
 
           <div className="auth-divider">
@@ -161,7 +242,7 @@ function AuthPage({ onAuthenticated }) {
             {isLogin ? '还没有账号?' : '已有账号?'}
             <button
               type="button"
-              onClick={() => setAuthMode(isLogin ? 'register' : 'login')}
+              onClick={() => switchAuthMode(isLogin ? 'register' : 'login')}
             >
               {isLogin ? '立即注册' : '去登录'}
             </button>

@@ -17,7 +17,10 @@ export async function getDatabase() {
   }
 
   if (!clientPromise) {
-    const client = new MongoClient(config.uri);
+    const client = new MongoClient(config.uri, {
+      // 数据库不可达时快速失败，避免登录页一直停在提交中。
+      serverSelectionTimeoutMS: config.serverSelectionTimeoutMs
+    });
     clientPromise = client.connect();
   }
 
