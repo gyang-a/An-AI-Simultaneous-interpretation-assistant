@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import AuthPage from './components/AuthPage';
+import HistoryPage from './components/HistoryPage';
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
 import QuickActionsPanel from './components/QuickActionsPanel';
@@ -27,6 +28,7 @@ import { useListeningStore } from './stores/listeningStore';
 
 function App() {
   const [authSession, setAuthSession] = useState(readAuthSession);
+  const [activeView, setActiveView] = useState('realtime');
   const [selectedInputSource, setSelectedInputSource] = useState('microphone');
   const isListening = useListeningStore((state) => state.isListening);
   const subtitleItems = useListeningStore((state) => state.subtitleItems);
@@ -234,41 +236,57 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Sidebar onLogout={handleLogout} />
+      <Sidebar
+        activeView={activeView}
+        onSelectView={setActiveView}
+        onLogout={handleLogout}
+      />
 
       <section className="workspace" aria-labelledby="page-title">
-        <Topbar />
-        <div className="workspace-grid">
-          <div className="main-column">
-            <ListeningPanel
-              isListening={isListening}
-              onStartListening={handleStartListening}
-              onStopListening={handleStopListening}
+        {activeView === 'history' ? (
+          <>
+            <Topbar
+              title="历史记录"
+              description="按会话查看已经保存到数据库的翻译记录。"
             />
-            <SubtitlePanel
-              items={subtitleItems}
-              isListening={isListening}
-              historyItems={translationHistory}
-              onClearHistory={handleClearTranslationHistory}
-            />
-          </div>
-          <div className="side-column">
-            <InputSourcePanel
-              disabled={isListening}
-              selectedSource={selectedInputSource}
-              onSelectSource={setSelectedInputSource}
-            />
-            <RealtimeStatusPanel
-              isListening={isListening}
-              playbackOffsetMs={playbackOffsetMs}
-              subtitleItems={subtitleItems}
-            />
-            <QuickActionsPanel
-              subtitleItems={subtitleItems}
-              onClearSubtitles={clearSubtitleItems}
-            />
-          </div>
-        </div>
+            <HistoryPage historyItems={translationHistory} />
+          </>
+        ) : (
+          <>
+            <Topbar />
+            <div className="workspace-grid">
+              <div className="main-column">
+                <ListeningPanel
+                  isListening={isListening}
+                  onStartListening={handleStartListening}
+                  onStopListening={handleStopListening}
+                />
+                <SubtitlePanel
+                  items={subtitleItems}
+                  isListening={isListening}
+                  historyItems={translationHistory}
+                  onClearHistory={handleClearTranslationHistory}
+                />
+              </div>
+              <div className="side-column">
+                <InputSourcePanel
+                  disabled={isListening}
+                  selectedSource={selectedInputSource}
+                  onSelectSource={setSelectedInputSource}
+                />
+                <RealtimeStatusPanel
+                  isListening={isListening}
+                  playbackOffsetMs={playbackOffsetMs}
+                  subtitleItems={subtitleItems}
+                />
+                <QuickActionsPanel
+                  subtitleItems={subtitleItems}
+                  onClearSubtitles={clearSubtitleItems}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </section>
     </main>
   );
