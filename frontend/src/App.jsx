@@ -20,10 +20,12 @@ import {
 import {
   clearAuthSession,
   readAuthSession,
-  saveAuthSession
+  saveAuthSession,
+  updateStoredAuthUser
 } from './services/authStorage';
 import { logoutAuthUser } from './services/authApi';
 import { createSubtitleSocket } from './services/subtitleSocket';
+import { uploadCurrentUserAvatar } from './services/userProfileApi';
 import { useListeningStore } from './stores/listeningStore';
 
 function App() {
@@ -50,6 +52,13 @@ function App() {
   const handleAuthenticated = (session) => {
     saveAuthSession(session);
     setAuthSession(session);
+  };
+
+  const handleAvatarChange = async (avatarDataUrl) => {
+    const user = await uploadCurrentUserAvatar(avatarDataUrl);
+    const nextSession = updateStoredAuthUser(user);
+
+    setAuthSession(nextSession);
   };
 
   const persistCurrentSession = async () => {
@@ -237,7 +246,9 @@ function App() {
     <main className="app-shell">
       <Sidebar
         activeView={activeView}
+        user={authSession.user}
         onSelectView={setActiveView}
+        onAvatarChange={handleAvatarChange}
         onLogout={handleLogout}
       />
 

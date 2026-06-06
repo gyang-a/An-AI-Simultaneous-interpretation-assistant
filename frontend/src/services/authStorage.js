@@ -44,6 +44,22 @@ export function saveAuthSession(session) {
   );
 }
 
+export function updateStoredAuthUser(user) {
+  const currentSession = readAuthSession();
+
+  if (!currentSession) {
+    return null;
+  }
+
+  const nextSession = normalizeAuthSession({
+    ...currentSession,
+    user
+  });
+
+  saveAuthSession(nextSession);
+  return nextSession;
+}
+
 export function clearAuthSession() {
   if (!canUseStorage()) {
     return;
