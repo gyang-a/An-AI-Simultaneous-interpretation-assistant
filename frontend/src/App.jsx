@@ -11,19 +11,13 @@ import {
   createMicrophoneCapture,
   createSystemAudioCapture
 } from './services/microphoneCapture';
+import {
+  clearAuthSession,
+  readAuthSession,
+  saveAuthSession
+} from './services/authStorage';
 import { createSubtitleSocket } from './services/subtitleSocket';
 import { useListeningStore } from './stores/listeningStore';
-
-const AUTH_SESSION_STORAGE_KEY = 'ai-assistant.auth-session';
-
-function readAuthSession() {
-  try {
-    const sessionJson = window.localStorage?.getItem(AUTH_SESSION_STORAGE_KEY);
-    return sessionJson ? JSON.parse(sessionJson) : null;
-  } catch (error) {
-    return null;
-  }
-}
 
 function App() {
   const [authSession, setAuthSession] = useState(readAuthSession);
@@ -45,7 +39,7 @@ function App() {
   const audioCaptureRef = useRef(null);
 
   const handleAuthenticated = (session) => {
-    window.localStorage?.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+    saveAuthSession(session);
     setAuthSession(session);
   };
 
@@ -54,7 +48,7 @@ function App() {
     closeSubtitleSocket();
     clearStatusTimer();
     setIsListening(false);
-    window.localStorage?.removeItem(AUTH_SESSION_STORAGE_KEY);
+    clearAuthSession();
     setAuthSession(null);
   };
 
