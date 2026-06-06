@@ -16,6 +16,7 @@ import {
   readAuthSession,
   saveAuthSession
 } from './services/authStorage';
+import { logoutAuthUser } from './services/authApi';
 import { createSubtitleSocket } from './services/subtitleSocket';
 import { useListeningStore } from './stores/listeningStore';
 
@@ -43,11 +44,18 @@ function App() {
     setAuthSession(session);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     stopAudioCapture();
     closeSubtitleSocket();
     clearStatusTimer();
     setIsListening(false);
+
+    try {
+      await logoutAuthUser();
+    } catch (error) {
+      // 即使后端 Cookie 清理失败，也要允许用户清掉本地 AT 回到登录页。
+    }
+
     clearAuthSession();
     setAuthSession(null);
   };

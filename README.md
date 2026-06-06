@@ -20,7 +20,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - Zustand：管理监听状态、字幕列表、播放进度和翻译记录。
 - Web Audio API：采集麦克风或系统音频，并转换为后端可处理的音频 chunk。
 - WebSocket：接收后端字幕事件，并上传音频控制消息与音频数据。
-- `localStorage`：当前用于演示登录态和本地翻译记录，后续会被后端账号体系替换。
+- `localStorage`：当前只缓存用户信息和 Access Token；Refresh Token 由后端写入 HttpOnly Cookie。
 - 前端认证客户端：封装注册、登录、刷新 Token、退出登录和获取当前用户请求，统一管理本地登录态缓存。
 
 ### 后端
@@ -40,16 +40,18 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 
 认证接口统一挂载在 `/api/auth` 下：
 
-- `POST /api/auth/register`：注册账号，返回用户信息、Access Token 和 Refresh Token。
-- `POST /api/auth/login`：登录账号，返回用户信息、Access Token 和 Refresh Token。
-- `POST /api/auth/refresh`：使用 Refresh Token 换取新的双 Token，并撤销旧 Refresh Token。
-- `POST /api/auth/logout`：撤销当前 Refresh Token。
+- `POST /api/auth/register`：注册账号，返回用户信息和 Access Token，并写入 HttpOnly Refresh Token Cookie。
+- `POST /api/auth/login`：登录账号，返回用户信息和 Access Token，并写入 HttpOnly Refresh Token Cookie。
+- `POST /api/auth/refresh`：使用 Cookie 中的 Refresh Token 换取新的 Access Token，并轮换 Refresh Token Cookie。
+- `POST /api/auth/logout`：撤销当前 Refresh Token，并清理 Refresh Token Cookie。
 - `GET /api/auth/me`：通过 `Authorization: Bearer <accessToken>` 获取当前用户。
 
 说明：
 
 - Access Token 使用 JWT，默认有效期 `15m`。
-- Refresh Token 使用随机字符串，数据库中只保存 SHA-256 哈希。
+- Refresh Token 使用随机字符串，数据库中只保存 HMAC-SHA256 哈希。
+- Refresh Token 不进入前端 `localStorage`，只通过 HttpOnly Cookie 保存。
+- Refresh Token 每次刷新都会轮换；旧 Token 再次出现时会被标记为复用并拒绝。
 - Refresh Token 默认有效期为 30 天，并通过 MongoDB TTL 索引自动清理过期记录。
 - 如果未配置 `MONGODB_URI`，认证接口会返回 `503`，但后端服务、健康检查和实时字幕 WebSocket 仍可运行。
 
@@ -123,6 +125,10 @@ npm run dev
 - `REFRESH_TOKEN_SECRET`：预留的 Refresh Token 密钥配置。
 - `ACCESS_TOKEN_TTL`：Access Token 有效期，默认 `15m`。
 - `REFRESH_TOKEN_TTL_DAYS`：Refresh Token 有效天数，默认 `30`。
+- `REFRESH_TOKEN_COOKIE_NAME`：Refresh Token Cookie 名称，默认 `ai_interpreter_rt`。
+- `REFRESH_TOKEN_COOKIE_SECURE`：是否仅通过 HTTPS 发送 Refresh Token Cookie，生产环境建议设为 `true`。
+- `REFRESH_TOKEN_COOKIE_SAME_SITE`：Refresh Token Cookie SameSite 策略，默认 `lax`。
+- `REFRESH_TOKEN_COOKIE_PATH`：Refresh Token Cookie Path，默认 `/api/auth`。
 - `PASSWORD_SALT_ROUNDS`：bcrypt 密码哈希轮数，默认 `12`。
 
 讯飞语音识别：

@@ -10,7 +10,10 @@ const app = express();
 const port = process.env.PORT || 3001;
 const server = createServer(app);
 
-app.use(cors());
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 app.use(express.json());
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
