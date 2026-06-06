@@ -3,11 +3,10 @@ import './Sidebar.less';
 const navItems = [
   { label: '实时翻译', icon: 'RT' },
   { label: '历史记录', icon: 'HI' },
-  { label: '字幕记录', icon: 'CC' },
-  { label: '设置', icon: 'SET' }
+  { label: '字幕记录', icon: 'CC' }
 ];
 
-function Sidebar() {
+function Sidebar({ onLogout }) {
   return (
     <aside className="sidebar" aria-label="主导航">
       <div className="brand">
@@ -35,15 +34,15 @@ function Sidebar() {
         ))}
       </nav>
 
-      <button className="theme-toggle" type="button">
-        <span className="theme-icon" aria-hidden="true">
-          ◐
-        </span>
-        明亮模式
-        <span className="theme-chevron" aria-hidden="true">
-          ›
-        </span>
-      </button>
+      <section className="sidebar-settings" aria-labelledby="sidebar-settings-title">
+        <div className="sidebar-settings-title">
+          <span className="nav-icon" aria-hidden="true">SET</span>
+          <h2 id="sidebar-settings-title">设置</h2>
+        </div>
+        <button className="logout-button" type="button" onClick={onLogout}>
+          退出登录
+        </button>
+      </section>
     </aside>
   );
 }
