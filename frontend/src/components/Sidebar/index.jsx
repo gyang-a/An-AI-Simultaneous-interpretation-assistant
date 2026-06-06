@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './Sidebar.less';
 
 const navItems = [
-  { id: 'realtime', label: '实时翻译', icon: 'RT' },
-  { id: 'history', label: '历史记录', icon: 'HI' }
+  { id: 'realtime', label: '实时翻译', icon: 'translate' },
+  { id: 'history', label: '历史记录', icon: 'history' }
 ];
 
 const AVATAR_SIZE = 160;
@@ -12,6 +12,55 @@ const MAX_SOURCE_AVATAR_SIZE = 5 * 1024 * 1024;
 
 function getAvatarInitial(user) {
   return String(user?.name || user?.account || 'AI').trim().slice(0, 1).toUpperCase();
+}
+
+function SidebarIcon({ name }) {
+  const iconProps = {
+    width: 20,
+    height: 20,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg'
+  };
+
+  if (name === 'history') {
+    return (
+      <svg {...iconProps} aria-hidden="true">
+        <path d="M4 12a8 8 0 1 0 2.34-5.66" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M4 5.5v4h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M12 8v4.4l3 1.8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
+  }
+
+  if (name === 'upload') {
+    return (
+      <svg {...iconProps} aria-hidden="true">
+        <path d="M12 16V5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="m8 9 4-4 4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M5 16.5V18a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === 'logout') {
+    return (
+      <svg {...iconProps} aria-hidden="true">
+        <path d="M10 6H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        <path d="M14 8l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M18 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...iconProps} aria-hidden="true">
+      <path d="M7 7h7a3 3 0 0 1 0 6h-2l-3.5 3.5V13H7a3 3 0 0 1 0-6Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M16.5 10.5h.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M8.2 10.5h4.6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M4.5 6.5 3 5m17 14-1.5-1.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 function readFileAsDataUrl(file) {
@@ -74,6 +123,34 @@ async function compressAvatarFile(file) {
 
 function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isProfileMenuOpen) {
+      return undefined;
+    }
+
+    const closeProfileMenu = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    const closeProfileMenuByKey = (event) => {
+      if (event.key === 'Escape') {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', closeProfileMenu);
+    document.addEventListener('keydown', closeProfileMenuByKey);
+
+    return () => {
+      document.removeEventListener('mousedown', closeProfileMenu);
+      document.removeEventListener('keydown', closeProfileMenuByKey);
+    };
+  }, [isProfileMenuOpen]);
 
   const handleAvatarInputChange = async (event) => {
     const file = event.target.files?.[0];
@@ -86,11 +163,20 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
       setIsUploadingAvatar(true);
       const avatarDataUrl = await compressAvatarFile(file);
       await onAvatarChange(avatarDataUrl);
+      setIsProfileMenuOpen(false);
     } catch (error) {
       window.alert(error.message || '头像上传失败，请换一张图片重试。');
     } finally {
       setIsUploadingAvatar(false);
       event.target.value = '';
+    }
+  };
+
+  const handleLogoutClick = () => {
+    // 退出会清理本地登录态和后端 RT Cookie，先让用户确认，避免误触头像菜单。
+    if (window.confirm('确定要退出登录吗？')) {
+      setIsProfileMenuOpen(false);
+      onLogout();
     }
   };
 
@@ -116,19 +202,53 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
             onClick={() => onSelectView(item.id)}
           >
             <span className="nav-icon" aria-hidden="true">
-              {item.icon}
+              <SidebarIcon name={item.icon} />
             </span>
             {item.label}
           </button>
         ))}
       </nav>
 
-      <section className="sidebar-settings" aria-labelledby="sidebar-settings-title">
-        <div className="sidebar-settings-title">
-          <span className="nav-icon" aria-hidden="true">SET</span>
-          <h2 id="sidebar-settings-title">设置</h2>
-        </div>
-        <div className="sidebar-profile">
+      <div className="sidebar-profile-menu-wrap" ref={profileMenuRef}>
+        {isProfileMenuOpen && (
+          <section className="sidebar-profile-menu" aria-label="用户菜单">
+            <div className="sidebar-profile-summary">
+              <span className="sidebar-avatar menu-avatar" aria-hidden="true">
+                {user?.avatarDataUrl ? (
+                  <img src={user.avatarDataUrl} alt="" />
+                ) : (
+                  getAvatarInitial(user)
+                )}
+              </span>
+              <div className="sidebar-profile-copy">
+                <strong>{user?.name || 'AI User'}</strong>
+                <span>{user?.account}</span>
+              </div>
+            </div>
+            <label className={isUploadingAvatar ? 'profile-menu-item disabled' : 'profile-menu-item'}>
+              <SidebarIcon name="upload" />
+              {isUploadingAvatar ? '上传中...' : '上传头像'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                disabled={isUploadingAvatar}
+                onChange={handleAvatarInputChange}
+              />
+            </label>
+            <button className="profile-menu-item danger" type="button" onClick={handleLogoutClick}>
+              <SidebarIcon name="logout" />
+              退出登录
+            </button>
+          </section>
+        )}
+
+        <button
+          className={isProfileMenuOpen ? 'sidebar-avatar-button active' : 'sidebar-avatar-button'}
+          type="button"
+          aria-label="打开用户菜单"
+          aria-expanded={isProfileMenuOpen}
+          onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
+        >
           <span className="sidebar-avatar" aria-hidden="true">
             {user?.avatarDataUrl ? (
               <img src={user.avatarDataUrl} alt="" />
@@ -136,24 +256,8 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
               getAvatarInitial(user)
             )}
           </span>
-          <div className="sidebar-profile-copy">
-            <strong>{user?.name || 'AI User'}</strong>
-            <span>{user?.account}</span>
-          </div>
-        </div>
-        <label className={isUploadingAvatar ? 'avatar-upload-button disabled' : 'avatar-upload-button'}>
-          {isUploadingAvatar ? '上传中...' : '上传头像'}
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            disabled={isUploadingAvatar}
-            onChange={handleAvatarInputChange}
-          />
-        </label>
-        <button className="logout-button" type="button" onClick={onLogout}>
-          退出登录
         </button>
-      </section>
+      </div>
     </aside>
   );
 }

@@ -1,9 +1,9 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   height: 100vh;
-  padding: 22px 16px;
+  padding: 22px 14px;
   border-right: 1px solid rgba(204, 214, 232, 0.78);
   background: rgba(255, 255, 255, 0.76);
   box-shadow: 20px 0 60px rgba(89, 103, 159, 0.08);
@@ -53,16 +53,16 @@
 
 .nav-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 50px;
+  min-height: 48px;
   width: 100%;
-  padding: 0 14px;
+  padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 8px;
   color: #64728e;
@@ -76,6 +76,7 @@
   color: #4169ff;
   border-color: rgba(94, 116, 255, 0.26);
   background: linear-gradient(90deg, rgba(98, 110, 255, 0.14), rgba(72, 141, 255, 0.1));
+  box-shadow: 0 12px 30px rgba(78, 103, 255, 0.12);
 }
 
 .nav-item:disabled {
@@ -90,43 +91,96 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  color: #5366ff;
-  background: rgba(111, 124, 255, 0.12);
-  font-size: 13px;
-  font-weight: 750;
+  color: currentColor;
+  background: rgba(111, 124, 255, 0.1);
 }
 
-.sidebar-settings {
-  display: grid;
-  gap: 10px;
+.sidebar-profile-menu-wrap {
+  position: relative;
   margin-top: auto;
-  padding: 12px;
-  border: 1px solid rgba(205, 214, 232, 0.72);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.68);
 }
 
-.sidebar-settings-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.sidebar-avatar-button {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 1px solid rgba(94, 116, 255, 0.2);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 34px rgba(78, 103, 255, 0.12);
 }
 
-.sidebar-settings-title h2 {
-  margin: 0;
-  color: #273653;
-  font-size: 13px;
-  font-weight: 750;
-  letter-spacing: 0;
+.sidebar-avatar-button.active {
+  border-color: rgba(65, 105, 255, 0.44);
+  box-shadow: 0 16px 40px rgba(65, 105, 255, 0.22);
 }
 
-.sidebar-profile {
+.sidebar-profile-menu {
+  position: absolute;
+  left: 0;
+  bottom: 64px;
+  z-index: 20;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  width: 220px;
+  padding: 12px;
+  border: 1px solid rgba(205, 214, 232, 0.82);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 22px 60px rgba(80, 94, 140, 0.18);
+  backdrop-filter: blur(18px);
+}
+
+.sidebar-profile-summary {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   min-width: 0;
-  padding: 6px 0 2px;
+  padding: 4px 4px 10px;
+  border-bottom: 1px solid rgba(215, 222, 237, 0.86);
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #32425f;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.profile-menu-item:hover {
+  border-color: rgba(91, 112, 255, 0.2);
+  background: rgba(241, 245, 255, 0.92);
+}
+
+.profile-menu-item.danger {
+  color: #b42318;
+}
+
+.profile-menu-item.danger:hover {
+  border-color: rgba(239, 68, 68, 0.18);
+  background: rgba(254, 242, 242, 0.9);
+}
+
+.profile-menu-item.disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.profile-menu-item input {
+  display: none;
 }
 
 .sidebar-avatar {
@@ -141,6 +195,11 @@
   background: linear-gradient(135deg, rgba(91, 213, 255, 0.2), rgba(124, 92, 255, 0.22));
   font-size: 16px;
   font-weight: 800;
+}
+
+.menu-avatar {
+  width: 42px;
+  height: 42px;
 }
 
 .sidebar-avatar img {
@@ -172,42 +231,6 @@
   font-size: 12px;
 }
 
-.avatar-upload-button {
-  display: inline-grid;
-  place-items: center;
-  min-height: 38px;
-  width: 100%;
-  border: 1px solid rgba(65, 105, 255, 0.22);
-  border-radius: 8px;
-  color: #4169ff;
-  background: rgba(240, 244, 255, 0.86);
-  font-size: 13px;
-  font-weight: 750;
-  text-align: center;
-  cursor: pointer;
-}
-
-.avatar-upload-button.disabled {
-  cursor: wait;
-  opacity: 0.72;
-}
-
-.avatar-upload-button input {
-  display: none;
-}
-
-.logout-button {
-  min-height: 42px;
-  width: 100%;
-  border: 1px solid rgba(239, 68, 68, 0.22);
-  border-radius: 8px;
-  color: #b42318;
-  background: rgba(254, 242, 242, 0.82);
-  font-size: 13px;
-  font-weight: 750;
-  text-align: center;
-}
-
 @media (max-width: 920px) {
   .sidebar {
     height: auto;
@@ -220,8 +243,15 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .sidebar-settings {
+  .sidebar-profile-menu-wrap {
     margin-top: 0;
+  }
+
+  .sidebar-profile-menu {
+    right: 0;
+    left: auto;
+    bottom: auto;
+    top: 60px;
   }
 }
 
