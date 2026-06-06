@@ -6,7 +6,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 
 - 前端提供登录/注册界面，当前仍为本地演示登录态，后续会接入后端认证接口。
 - 登录后进入实时翻译主界面，支持输入源选择、开始/停止监听、实时字幕展示、快捷复制和清空。
-- 翻译记录当前存储在浏览器 `localStorage`，后续计划迁移到 MongoDB。
+- 翻译记录按登录用户存储在 MongoDB，前端只保留当前页面内存副本。
 - 后端提供健康检查、字幕 WebSocket 服务和账号认证 API。
 - 后端认证模块已按 `config`、`database`、`repositories`、`services`、`middleware`、`routes` 拆分，避免业务逻辑堆在 `server.js`。
 
@@ -30,7 +30,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - CORS：允许前端开发服务器访问后端接口。
 - ws：提供字幕 WebSocket 服务。
 - dotenv：读取本地 `.env` 配置。
-- MongoDB：保存用户账号和刷新令牌，后续用于保存翻译会话和字幕片段。
+- MongoDB：保存用户账号、刷新令牌、翻译会话和字幕片段。
 - JSON Web Token：签发短期 Access Token。
 - bcryptjs：对用户密码进行哈希存储。
 - Xunfei IAT Provider：通过讯飞语音听写 WebAPI 接收音频并返回识别文本。
@@ -45,6 +45,20 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - `POST /api/auth/refresh`：使用 Cookie 中的 Refresh Token 换取新的 Access Token，并轮换 Refresh Token Cookie。
 - `POST /api/auth/logout`：撤销当前 Refresh Token，并清理 Refresh Token Cookie。
 - `GET /api/auth/me`：通过 `Authorization: Bearer <accessToken>` 获取当前用户。
+
+## 翻译记录 API
+
+翻译记录接口统一挂载在 `/api/translation-history` 下，并要求携带 Access Token：
+
+- `GET /api/translation-history`：获取当前用户最近的翻译记录。
+- `POST /api/translation-history`：保存或更新当前用户的一次翻译会话。
+- `DELETE /api/translation-history`：清空当前用户的翻译记录。
+
+说明：
+
+- 前端停止监听或开始下一轮监听前，会把当前字幕会话保存到后端。
+- 后端按 `userId + sessionId` 建唯一索引，重复保存同一场会话时会更新原记录。
+- 前端不再把翻译记录写入 `localStorage`。
 
 说明：
 
@@ -187,6 +201,6 @@ npm run dev
 
 1. 前端登录页接入后端认证 API。
 2. 增加 Access Token 过期后的自动刷新逻辑。
-3. 将翻译记录从 `localStorage` 迁移到 MongoDB。
-4. 建立翻译会话和字幕片段数据模型。
-5. 增加受保护 API 和前端登录态恢复。
+3. 增加翻译记录分页、搜索和按日期筛选。
+4. 增加受保护 API 和前端登录态恢复。
+5. 增加记录保存失败时的用户提示和重试入口。

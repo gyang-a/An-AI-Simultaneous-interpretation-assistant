@@ -4,6 +4,7 @@ import express from 'express';
 import { createServer } from 'http';
 import authRoutes from './routes/authRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
+import translationHistoryRoutes from './routes/translationHistoryRoutes.js';
 import { attachSubtitleSocket, SUBTITLE_SOCKET_PATH } from './websocket/subtitleSocket.js';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/api', healthRoutes);
 app.use('/api', authRoutes);
+app.use('/api', translationHistoryRoutes);
 
 attachSubtitleSocket(server);
 
