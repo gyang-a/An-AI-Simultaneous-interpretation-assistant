@@ -12,6 +12,11 @@ import {
   createSystemAudioCapture
 } from './services/microphoneCapture';
 import {
+  clearTranslationHistoryRecords,
+  fetchTranslationHistory,
+  saveTranslationHistoryRecord
+} from './services/translationHistoryApi';
+import {
   clearAuthSession,
   readAuthSession,
   saveAuthSession
@@ -31,6 +36,7 @@ function App() {
   const resetListeningSession = useListeningStore((state) => state.resetListeningSession);
   const clearSubtitleItems = useListeningStore((state) => state.clearSubtitleItems);
   const clearTranslationHistory = useListeningStore((state) => state.clearTranslationHistory);
+  const setTranslationHistory = useListeningStore((state) => state.setTranslationHistory);
   const archiveCurrentSession = useListeningStore((state) => state.archiveCurrentSession);
   const setPlaybackOffsetMs = useListeningStore((state) => state.setPlaybackOffsetMs);
   const applySubtitleEvent = useListeningStore((state) => state.applySubtitleEvent);
@@ -42,6 +48,30 @@ function App() {
   const handleAuthenticated = (session) => {
     saveAuthSession(session);
     setAuthSession(session);
+  };
+
+  const persistCurrentSession = async () => {
+    const historyItem = archiveCurrentSession();
+
+    if (!historyItem) {
+      return;
+    }
+
+    try {
+      await saveTranslationHistoryRecord(historyItem);
+    } catch (error) {
+      // 记录保存失败不影响实时监听流程，用户仍能继续使用当前字幕。
+    }
+  };
+
+  const handleClearTranslationHistory = async () => {
+    clearTranslationHistory();
+
+    try {
+      await clearTranslationHistoryRecords();
+    } catch (error) {
+      // 清空失败时保持前端已清空状态，下一次登录后会重新以数据库为准。
+    }
   };
 
   const handleLogout = async () => {
@@ -93,7 +123,7 @@ function App() {
     stopAudioCapture();
     closeSubtitleSocket();
     clearStatusTimer();
-    archiveCurrentSession();
+    await persistCurrentSession();
     resetListeningSession();
 
     subtitleSocketRef.current = createSubtitleSocket({
@@ -152,9 +182,9 @@ function App() {
     }
   };
 
-  const handleStopListening = () => {
+  const handleStopListening = async () => {
     subtitleSocketRef.current?.sendAudioStop();
-    archiveCurrentSession();
+    await persistCurrentSession();
     stopAudioCapture();
     closeSubtitleSocket();
     clearStatusTimer();
@@ -168,6 +198,31 @@ function App() {
       clearStatusTimer();
     };
   }, []);
+
+  useEffect(() => {
+    if (!authSession) {
+      setTranslationHistory([]);
+      return;
+    }
+
+    let isActive = true;
+
+    fetchTranslationHistory()
+      .then((historyItems) => {
+        if (isActive) {
+          setTranslationHistory(historyItems);
+        }
+      })
+      .catch(() => {
+        if (isActive) {
+          setTranslationHistory([]);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [authSession, setTranslationHistory]);
 
   if (!authSession) {
     return <AuthPage onAuthenticated={handleAuthenticated} />;
@@ -190,7 +245,7 @@ function App() {
               items={subtitleItems}
               isListening={isListening}
               historyItems={translationHistory}
-              onClearHistory={clearTranslationHistory}
+              onClearHistory={handleClearTranslationHistory}
             />
           </div>
           <div className="side-column">
