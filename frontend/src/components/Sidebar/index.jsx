@@ -124,6 +124,7 @@ async function compressAvatarFile(file) {
 function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const profileMenuRef = useRef(null);
 
   useEffect(() => {
@@ -134,12 +135,14 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
     const closeProfileMenu = (event) => {
       if (!profileMenuRef.current?.contains(event.target)) {
         setIsProfileMenuOpen(false);
+        setIsLogoutConfirmOpen(false);
       }
     };
 
     const closeProfileMenuByKey = (event) => {
       if (event.key === 'Escape') {
         setIsProfileMenuOpen(false);
+        setIsLogoutConfirmOpen(false);
       }
     };
 
@@ -164,6 +167,7 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
       const avatarDataUrl = await compressAvatarFile(file);
       await onAvatarChange(avatarDataUrl);
       setIsProfileMenuOpen(false);
+      setIsLogoutConfirmOpen(false);
     } catch (error) {
       window.alert(error.message || '头像上传失败，请换一张图片重试。');
     } finally {
@@ -173,11 +177,18 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
   };
 
   const handleLogoutClick = () => {
-    // 退出会清理本地登录态和后端 RT Cookie，先让用户确认，避免误触头像菜单。
-    if (window.confirm('确定要退出登录吗？')) {
-      setIsProfileMenuOpen(false);
-      onLogout();
-    }
+    setIsLogoutConfirmOpen(true);
+  };
+
+  const handleCancelLogout = () => {
+    setIsLogoutConfirmOpen(false);
+  };
+
+  const handleConfirmLogout = () => {
+    // 退出会清理本地登录态和后端 RT Cookie，确认后再执行，避免误触头像菜单。
+    setIsProfileMenuOpen(false);
+    setIsLogoutConfirmOpen(false);
+    onLogout();
   };
 
   return (
@@ -239,6 +250,20 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
               <SidebarIcon name="logout" />
               退出登录
             </button>
+            {isLogoutConfirmOpen && (
+              <div className="logout-confirm-panel" role="alertdialog" aria-modal="false" aria-labelledby="logout-confirm-title">
+                <strong id="logout-confirm-title">确定退出登录吗？</strong>
+                <p>退出后需要重新登录才能继续查看翻译记录。</p>
+                <div className="logout-confirm-actions">
+                  <button type="button" onClick={handleCancelLogout}>
+                    取消
+                  </button>
+                  <button className="danger" type="button" onClick={handleConfirmLogout}>
+                    确定退出
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
 
@@ -247,7 +272,10 @@ function Sidebar({ activeView, user, onSelectView, onAvatarChange, onLogout }) {
           type="button"
           aria-label="打开用户菜单"
           aria-expanded={isProfileMenuOpen}
-          onClick={() => setIsProfileMenuOpen((isOpen) => !isOpen)}
+          onClick={() => {
+            setIsProfileMenuOpen((isOpen) => !isOpen);
+            setIsLogoutConfirmOpen(false);
+          }}
         >
           <span className="sidebar-avatar" aria-hidden="true">
             {user?.avatarDataUrl ? (
