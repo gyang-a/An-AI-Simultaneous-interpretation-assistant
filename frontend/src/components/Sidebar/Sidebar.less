@@ -183,6 +183,50 @@
   display: none;
 }
 
+.logout-confirm-panel {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 247, 247, 0.96);
+}
+
+.logout-confirm-panel strong {
+  color: #8f1d18;
+  font-size: 13px;
+}
+
+.logout-confirm-panel p {
+  margin: 0;
+  color: #8b5f5c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.logout-confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.logout-confirm-actions button {
+  min-height: 34px;
+  border: 1px solid rgba(204, 214, 232, 0.9);
+  border-radius: 8px;
+  color: #46556f;
+  background: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.logout-confirm-actions button.danger {
+  border-color: rgba(239, 68, 68, 0.22);
+  color: #ffffff;
+  background: #d92d20;
+}
+
 .sidebar-avatar {
   display: inline-grid;
   place-items: center;

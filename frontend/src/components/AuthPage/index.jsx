@@ -95,7 +95,7 @@ function AuthPage({ onAuthenticated }) {
               <br />
               世界<span>为你</span>倾听。
             </h1>
-            <p>基于 AI 实时语音识别与翻译，让跨语言沟通更自然、更高效。</p>
+            <p>基于 AI 实时语音识别与翻译，让跨语言沟通更自然、更高效</p>
           </div>
 
           <div className="auth-orbit" aria-hidden="true">
@@ -136,7 +136,7 @@ function AuthPage({ onAuthenticated }) {
             </div>
           </div>
 
-          <p className="auth-security">你的数据安全，由登录鉴权与后端存储共同守护</p>
+          <p className="auth-security">依托大模型深度理解能力，为您提供更懂语境的精准翻译</p>
         </div>
 
         <form className="auth-card" onSubmit={handleSubmit}>
@@ -225,18 +225,8 @@ function AuthPage({ onAuthenticated }) {
           </div>
 
           <button className="auth-submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? '处理中...' : (isLogin ? '登录' : '注册')}
+            {isSubmitting ? (isLogin ? '登录中...' : '注册中...') : (isLogin ? '登录' : '注册')}
           </button>
-
-          <div className="auth-divider">
-            <span>{isLogin ? '或使用以下方式登录' : '注册后可绑定第三方账号'}</span>
-          </div>
-
-          <div className="auth-social-list" aria-label="第三方登录方式">
-            <button type="button" aria-label="Google 登录">G</button>
-            <button type="button" aria-label="Apple 登录">A</button>
-            <button type="button" aria-label="Microsoft 登录">M</button>
-          </div>
 
           <p className="auth-switch">
             {isLogin ? '还没有账号?' : '已有账号?'}
