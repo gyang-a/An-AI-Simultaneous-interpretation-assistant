@@ -1,6 +1,6 @@
 import './Topbar.less';
 
-function Topbar({ onLogout }) {
+function Topbar() {
   return (
     <header className="topbar">
       <div>
@@ -16,10 +16,6 @@ function Topbar({ onLogout }) {
         </div>
         <button className="settings-button" type="button" aria-label="设置">
           ⚙
-        </button>
-        <button className="user-avatar" type="button" aria-label="退出登录" onClick={onLogout}>
-          <span aria-hidden="true">AI</span>
-          <i aria-hidden="true" />
         </button>
       </div>
     </header>

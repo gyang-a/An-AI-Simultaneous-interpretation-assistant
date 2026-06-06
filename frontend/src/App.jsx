@@ -167,10 +167,10 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Sidebar />
+      <Sidebar onLogout={handleLogout} />
 
       <section className="workspace" aria-labelledby="page-title">
-        <Topbar onLogout={handleLogout} />
+        <Topbar />
         <div className="workspace-grid">
           <div className="main-column">
             <ListeningPanel
