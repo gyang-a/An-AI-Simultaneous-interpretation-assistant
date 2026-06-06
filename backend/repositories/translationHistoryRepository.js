@@ -82,7 +82,12 @@ export async function upsertTranslationHistoryRecord({
   return mapHistoryRecord(result);
 }
 
-export async function clearTranslationHistoryByUserId(userId) {
+export async function deleteTranslationHistoryBySessionId(userId, sessionId) {
   const collection = await getTranslationHistoryCollection();
-  await collection.deleteMany({ userId: new ObjectId(userId) });
+  const result = await collection.deleteOne({
+    userId: new ObjectId(userId),
+    sessionId
+  });
+
+  return result.deletedCount > 0;
 }

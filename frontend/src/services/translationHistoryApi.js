@@ -77,8 +77,8 @@ export async function saveTranslationHistoryRecord(record) {
   return payload.historyItem;
 }
 
-export async function clearTranslationHistoryRecords() {
-  return requestTranslationHistoryApiWithRefresh('', {
+export async function deleteTranslationHistoryRecord(sessionId) {
+  return requestTranslationHistoryApiWithRefresh(`/${encodeURIComponent(sessionId)}`, {
     method: 'DELETE'
   });
 }

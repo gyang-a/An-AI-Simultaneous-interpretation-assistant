@@ -7,7 +7,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - 前端提供登录/注册界面，当前仍为本地演示登录态，后续会接入后端认证接口。
 - 登录后进入实时翻译主界面，支持输入源选择、开始/停止监听、实时字幕展示、快捷复制和清空。
 - 翻译记录按登录用户存储在 MongoDB，前端只保留当前页面内存副本。
-- 左侧历史记录入口支持按会话查看已保存的翻译记录和字幕详情。
+- 左侧历史记录入口支持按会话查看已保存的翻译记录和字幕详情，并可右键删除单条历史记录。
 - 后端提供健康检查、字幕 WebSocket 服务和账号认证 API。
 - 后端认证模块已按 `config`、`database`、`repositories`、`services`、`middleware`、`routes` 拆分，避免业务逻辑堆在 `server.js`。
 
@@ -53,7 +53,7 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 
 - `GET /api/translation-history`：获取当前用户最近的翻译记录。
 - `POST /api/translation-history`：保存或更新当前用户的一次翻译会话。
-- `DELETE /api/translation-history`：清空当前用户的翻译记录。
+- `DELETE /api/translation-history/:sessionId`：删除当前用户的指定翻译会话。
 
 说明：
 
