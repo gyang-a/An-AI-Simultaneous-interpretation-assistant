@@ -1,14 +1,14 @@
 # AI 同声传译助手
 
-AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，目标是将外语音频实时识别、翻译并以双语字幕形式呈现。当前项目已接入实时监听、字幕展示、翻译记录前端能力，并新增登录/注册入口，为后续账号体系、MongoDB 翻译记录存储和双 Token 鉴权做准备。
+AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，目标是将外语音频实时识别、翻译并以双语字幕形式呈现。项目当前包含实时监听、字幕展示、翻译记录基础能力、登录/注册前端入口，以及后端账号认证 API 基础版。
 
 ## 当前状态
 
-- 前端提供登录/注册界面，当前为本地演示登录态，后续可替换为后端认证接口。
-- 登录后进入实时翻译主界面，支持选择输入源、开始/停止监听、实时字幕展示和快捷复制/清空。
+- 前端提供登录/注册界面，当前仍为本地演示登录态，后续会接入后端认证接口。
+- 登录后进入实时翻译主界面，支持输入源选择、开始/停止监听、实时字幕展示、快捷复制和清空。
 - 翻译记录当前存储在浏览器 `localStorage`，后续计划迁移到 MongoDB。
-- 后端提供健康检查接口和字幕 WebSocket 服务。
-- 后端已拆分 `config`、`providers`、`routes`、`websocket` 等目录，后续认证路由会继续按模块拆分，不堆在 `server.js`。
+- 后端提供健康检查、字幕 WebSocket 服务和账号认证 API。
+- 后端认证模块已按 `config`、`database`、`repositories`、`services`、`middleware`、`routes` 拆分，避免业务逻辑堆在 `server.js`。
 
 ## 技术栈
 
@@ -25,29 +25,45 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 ### 后端
 
 - Node.js：后端运行环境。
-- Express：提供 HTTP API 和后续认证、记录等业务路由。
+- Express：提供 HTTP API、认证路由和后续记录业务路由。
 - CORS：允许前端开发服务器访问后端接口。
 - ws：提供字幕 WebSocket 服务。
 - dotenv：读取本地 `.env` 配置。
+- MongoDB：保存用户账号和刷新令牌，后续用于保存翻译会话和字幕片段。
+- JSON Web Token：签发短期 Access Token。
+- bcryptjs：对用户密码进行哈希存储。
 - Xunfei IAT Provider：通过讯飞语音听写 WebAPI 接收音频并返回识别文本。
 - Xunfei Translation Provider：调用讯飞翻译接口生成翻译文本。
 
-### 数据与认证规划
+## 账号认证 API
 
-- MongoDB：计划用于保存用户、刷新令牌、翻译会话和字幕片段。
-- 双 Token 鉴权：计划使用短期 Access Token + 长期 Refresh Token。
-- 认证路由：计划拆分到独立 `routes`、`services`、`models` 或 `repositories` 文件，不集中堆在入口文件。
-- 翻译记录：后续由后端按用户归档，前端从 API 拉取历史记录。
+认证接口统一挂载在 `/api/auth` 下：
+
+- `POST /api/auth/register`：注册账号，返回用户信息、Access Token 和 Refresh Token。
+- `POST /api/auth/login`：登录账号，返回用户信息、Access Token 和 Refresh Token。
+- `POST /api/auth/refresh`：使用 Refresh Token 换取新的双 Token，并撤销旧 Refresh Token。
+- `POST /api/auth/logout`：撤销当前 Refresh Token。
+- `GET /api/auth/me`：通过 `Authorization: Bearer <accessToken>` 获取当前用户。
+
+说明：
+
+- Access Token 使用 JWT，默认有效期 `15m`。
+- Refresh Token 使用随机字符串，数据库中只保存 SHA-256 哈希。
+- Refresh Token 默认有效期为 30 天，并通过 MongoDB TTL 索引自动清理过期记录。
+- 如果未配置 `MONGODB_URI`，认证接口会返回 `503`，但后端服务、健康检查和实时字幕 WebSocket 仍可运行。
 
 ## 第三方库清单
 
 运行依赖：
 
 - `@vitejs/plugin-react`：Vite React 插件，当前版本 `^6.0.2`。
+- `bcryptjs`：密码哈希库，当前版本以 `package.json` 为准。
 - `concurrently`：同时启动前端和后端开发服务，当前版本 `^9.2.1`。
 - `cors`：Express 跨域中间件，当前版本 `^2.8.5`。
 - `dotenv`：读取 `.env` 配置，当前版本 `^17.4.2`。
 - `express`：后端 HTTP 服务框架，当前版本 `^5.1.0`。
+- `jsonwebtoken`：JWT 签发与校验库，当前版本以 `package.json` 为准。
+- `mongodb`：MongoDB 官方 Node.js 驱动，当前版本以 `package.json` 为准。
 - `react`：前端 UI 框架，当前版本 `^19.1.1`。
 - `react-dom`：React DOM 渲染入口，当前版本 `^19.1.1`。
 - `ws`：Node.js WebSocket 服务库，当前版本 `^8.21.0`。
@@ -58,8 +74,6 @@ AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，�
 - `vite`：Vite 构建工具，当前版本 `^8.0.16`。
 - `less`：Less 样式预处理器，当前版本 `^4.6.4`。
 - `nodemon`：后端开发时自动重启，当前版本 `^3.1.10`。
-
-说明：本次登录界面和主界面配色调整未新增第三方库，视觉元素均由 React 组件与 Less 实现。
 
 ## 本地启动
 
@@ -94,14 +108,32 @@ npm run dev
 
 ## 环境变量
 
+基础配置：
+
 - `PORT`：后端服务端口，默认 `3001`。
 - `AI_PROVIDER`：后端 AI Provider，当前支持 `xunfei`。
+
+数据库与认证：
+
+- `MONGODB_URI`：MongoDB 连接地址。
+- `MONGODB_DB_NAME`：MongoDB 数据库名称，默认 `ai_interpreter`。
+- `ACCESS_TOKEN_SECRET`：Access Token JWT 签名密钥。
+- `REFRESH_TOKEN_SECRET`：预留的 Refresh Token 密钥配置。
+- `ACCESS_TOKEN_TTL`：Access Token 有效期，默认 `15m`。
+- `REFRESH_TOKEN_TTL_DAYS`：Refresh Token 有效天数，默认 `30`。
+- `PASSWORD_SALT_ROUNDS`：bcrypt 密码哈希轮数，默认 `12`。
+
+讯飞语音识别：
+
 - `XUNFEI_APP_ID`：讯飞开放平台应用 AppID。
 - `XUNFEI_API_KEY`：讯飞 APIKey。
 - `XUNFEI_API_SECRET`：讯飞 APISecret。
 - `XUNFEI_IAT_URL`：讯飞语音听写 WebSocket 地址，默认 `wss://iat-api.xfyun.cn/v2/iat`。
 - `XUNFEI_IAT_LANGUAGE`：识别语种，默认 `zh_cn`。
 - `XUNFEI_IAT_VAD_EOS`：端点检测静音时长，默认 `5000`。
+
+讯飞翻译：
+
 - `XUNFEI_TRANSLATION_FROM`：翻译源语言，默认 `en`。
 - `XUNFEI_TRANSLATION_TO`：翻译目标语言，默认 `cn`。
 - `TRANSLATION_DEBOUNCE_MS`：翻译防抖时间。
@@ -114,8 +146,12 @@ npm run dev
 ├── backend
 │   ├── config
 │   ├── contracts
+│   ├── database
+│   ├── middleware
 │   ├── providers
+│   ├── repositories
 │   ├── routes
+│   ├── services
 │   ├── websocket
 │   └── server.js
 ├── frontend
@@ -131,10 +167,18 @@ npm run dev
 └── README.md
 ```
 
+## PR 规范
+
+- 每个 PR 只实现或修改一个单一功能。
+- 大功能拆成多个独立 PR 分步提交。
+- PR 标题需要一句话说明新增或修改了什么。
+- PR 描述需要包含功能描述、实现思路和测试方式。
+- PR 合并后，主分支代码需要保持可运行，评委任意时间查看都能复现演示效果。
+
 ## 后续计划
 
-1. 接入 MongoDB，建立用户、翻译会话和字幕片段数据模型。
-2. 实现注册、登录、刷新令牌、退出登录等认证路由。
-3. 使用 Access Token + Refresh Token 的双 Token 鉴权模式。
-4. 将翻译记录从 `localStorage` 迁移到后端数据库。
-5. 补充受保护路由、请求拦截和登录态恢复。
+1. 前端登录页接入后端认证 API。
+2. 增加请求层 Token 保存、刷新和退出登录逻辑。
+3. 将翻译记录从 `localStorage` 迁移到 MongoDB。
+4. 建立翻译会话和字幕片段数据模型。
+5. 增加受保护 API 和前端登录态恢复。
