@@ -42,11 +42,6 @@ function InputSourcePanel({ disabled, selectedSource, onSelectSource }) {
                 <strong>{source.title}</strong>
                 <small>{source.description}</small>
               </span>
-              {source.badge && !isActive && (
-                <span className="source-badge">
-                  {source.badge}
-                </span>
-              )}
               {isActive && (
                 <span className="source-check" aria-hidden="true">
                   ✓

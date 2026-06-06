@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import AuthPage from './components/AuthPage';
 import InputSourcePanel from './components/InputSourcePanel';
 import ListeningPanel from './components/ListeningPanel';
 import QuickActionsPanel from './components/QuickActionsPanel';
@@ -13,20 +14,49 @@ import {
 import { createSubtitleSocket } from './services/subtitleSocket';
 import { useListeningStore } from './stores/listeningStore';
 
+const AUTH_SESSION_STORAGE_KEY = 'ai-assistant.auth-session';
+
+function readAuthSession() {
+  try {
+    const sessionJson = window.localStorage?.getItem(AUTH_SESSION_STORAGE_KEY);
+    return sessionJson ? JSON.parse(sessionJson) : null;
+  } catch (error) {
+    return null;
+  }
+}
+
 function App() {
+  const [authSession, setAuthSession] = useState(readAuthSession);
   const [selectedInputSource, setSelectedInputSource] = useState('microphone');
   const isListening = useListeningStore((state) => state.isListening);
   const subtitleItems = useListeningStore((state) => state.subtitleItems);
+  const translationHistory = useListeningStore((state) => state.translationHistory);
   const playbackOffsetMs = useListeningStore((state) => state.playbackOffsetMs);
   const setIsListening = useListeningStore((state) => state.setIsListening);
   const resetListeningSession = useListeningStore((state) => state.resetListeningSession);
   const clearSubtitleItems = useListeningStore((state) => state.clearSubtitleItems);
+  const clearTranslationHistory = useListeningStore((state) => state.clearTranslationHistory);
+  const archiveCurrentSession = useListeningStore((state) => state.archiveCurrentSession);
   const setPlaybackOffsetMs = useListeningStore((state) => state.setPlaybackOffsetMs);
   const applySubtitleEvent = useListeningStore((state) => state.applySubtitleEvent);
   const playbackStartedAtRef = useRef(0);
   const statusTimerRef = useRef(null);
   const subtitleSocketRef = useRef(null);
   const audioCaptureRef = useRef(null);
+
+  const handleAuthenticated = (session) => {
+    window.localStorage?.setItem(AUTH_SESSION_STORAGE_KEY, JSON.stringify(session));
+    setAuthSession(session);
+  };
+
+  const handleLogout = () => {
+    stopAudioCapture();
+    closeSubtitleSocket();
+    clearStatusTimer();
+    setIsListening(false);
+    window.localStorage?.removeItem(AUTH_SESSION_STORAGE_KEY);
+    setAuthSession(null);
+  };
 
   const clearStatusTimer = () => {
     if (statusTimerRef.current) {
@@ -61,6 +91,7 @@ function App() {
     stopAudioCapture();
     closeSubtitleSocket();
     clearStatusTimer();
+    archiveCurrentSession();
     resetListeningSession();
 
     subtitleSocketRef.current = createSubtitleSocket({
@@ -121,6 +152,7 @@ function App() {
 
   const handleStopListening = () => {
     subtitleSocketRef.current?.sendAudioStop();
+    archiveCurrentSession();
     stopAudioCapture();
     closeSubtitleSocket();
     clearStatusTimer();
@@ -135,12 +167,16 @@ function App() {
     };
   }, []);
 
+  if (!authSession) {
+    return <AuthPage onAuthenticated={handleAuthenticated} />;
+  }
+
   return (
     <main className="app-shell">
       <Sidebar />
 
       <section className="workspace" aria-labelledby="page-title">
-        <Topbar />
+        <Topbar onLogout={handleLogout} />
         <div className="workspace-grid">
           <div className="main-column">
             <ListeningPanel
@@ -148,7 +184,12 @@ function App() {
               onStartListening={handleStartListening}
               onStopListening={handleStopListening}
             />
-            <SubtitlePanel items={subtitleItems} isListening={isListening} />
+            <SubtitlePanel
+              items={subtitleItems}
+              isListening={isListening}
+              historyItems={translationHistory}
+              onClearHistory={clearTranslationHistory}
+            />
           </div>
           <div className="side-column">
             <InputSourcePanel
