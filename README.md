@@ -1,94 +1,83 @@
 # AI 同声传译助手
 
-AI 同声传译助手面向英语演讲、技术分享、国际会议和网课等单向音频场景，目标是将外语音频实时、流畅地翻译成中文，并以字幕或语音形式呈现。系统后续会支持基于上下文的字幕修正能力，自动纠正之前识别或翻译中的错误。
+AI 同声传译助手面向演讲、会议、网课和跨语言沟通场景，目标是将外语音频实时识别、翻译并以双语字幕形式呈现。当前项目已接入实时监听、字幕展示、翻译记录前端能力，并新增登录/注册入口，为后续账号体系、MongoDB 翻译记录存储和双 Token 鉴权做准备。
 
 ## 当前状态
 
-当前仓库已建立可启动的前后端项目结构，并完成同声传译 Demo 的核心 Mock 链路：
-
-- 前端支持开始监听、停止监听、字幕列表展示和字幕修正展示
-- 后端提供 WebSocket 字幕流服务，按 Mock 时间线推送 `partial`、`final`、`revision` 字幕事件
-- 前端通过 WebSocket 接收字幕事件，并通过麦克风入口持续发送音频 chunk 到后端
-- 前端实时状态面板展示监听时长和字幕条数，不再依赖 Mock 指标
-- 前端监听状态、字幕列表和播放进度已接入 Zustand 全局状态管理
-- 后端已接入 Mock AI 转写与翻译 Provider，用于封装模拟字幕事件输出
-- 后端已提供 AI Provider 选择入口，当前默认使用 `xunfei` 讯飞 IAT 语音识别 Provider
+- 前端提供登录/注册界面，当前为本地演示登录态，后续可替换为后端认证接口。
+- 登录后进入实时翻译主界面，支持选择输入源、开始/停止监听、实时字幕展示和快捷复制/清空。
+- 翻译记录当前存储在浏览器 `localStorage`，后续计划迁移到 MongoDB。
+- 后端提供健康检查接口和字幕 WebSocket 服务。
+- 后端已拆分 `config`、`providers`、`routes`、`websocket` 等目录，后续认证路由会继续按模块拆分，不堆在 `server.js`。
 
 ## 技术栈
 
 ### 前端
 
-- React 19：构建字幕展示、监听控制和实时状态界面
-- Vite 8：前端开发服务器与构建工具
-- Less：作为 CSS 预处理器，按全局、布局和组件维度拆分样式，便于后续维护
-- Zustand：管理监听状态、字幕列表和播放进度
-- Web Audio API：采集麦克风音频，降采样并编码为 16k PCM chunk
-- WebSocket：接收后端字幕事件，并向后端发送音频控制消息和音频 chunk
+- React 19：构建登录页、实时翻译界面、字幕列表和状态面板。
+- Vite 8：前端开发服务器与生产构建。
+- Less：按全局、布局和组件维度拆分样式。
+- Zustand：管理监听状态、字幕列表、播放进度和翻译记录。
+- Web Audio API：采集麦克风或系统音频，并转换为后端可处理的音频 chunk。
+- WebSocket：接收后端字幕事件，并上传音频控制消息与音频数据。
+- `localStorage`：当前用于演示登录态和本地翻译记录，后续会被后端账号体系替换。
 
 ### 后端
 
-- Node.js：后端运行环境
-- Express：提供 API 服务和后续真实 AI 处理入口
-- CORS：允许前端开发服务器访问后端接口
-- ws：提供 WebSocket 服务，当前用于推送 Mock 字幕事件并接收前端音频 chunk
-- Mock AI Provider：封装模拟转写、翻译和修正事件输出，后续可替换为真实 AI Provider
-- Xunfei IAT Provider：通过讯飞语音听写流式 WebAPI 接收 16k PCM 音频并返回识别字幕
-- AI Provider Factory：根据环境变量选择后端 AI Provider，当前支持 `xunfei`
+- Node.js：后端运行环境。
+- Express：提供 HTTP API 和后续认证、记录等业务路由。
+- CORS：允许前端开发服务器访问后端接口。
+- ws：提供字幕 WebSocket 服务。
+- dotenv：读取本地 `.env` 配置。
+- Xunfei IAT Provider：通过讯飞语音听写 WebAPI 接收音频并返回识别文本。
+- Xunfei Translation Provider：调用讯飞翻译接口生成翻译文本。
 
-### 数据与通信
+### 数据与认证规划
 
-- HTTP API：当前提供 `/api/health` 健康检查
-- WebSocket：当前提供 `/ws/subtitles`，用于字幕事件下行和音频数据上行
-- Mock 字幕事件：包含 `partial`、`final`、`revision` 三类事件，字幕修正通过 `revisionOf` 指向被修正片段，并兼容使用 `segmentId` 替换旧字幕
-
-### 开发工具
-
-- concurrently：同时启动前端和后端
-- nodemon：后端开发时自动重启
+- MongoDB：计划用于保存用户、刷新令牌、翻译会话和字幕片段。
+- 双 Token 鉴权：计划使用短期 Access Token + 长期 Refresh Token。
+- 认证路由：计划拆分到独立 `routes`、`services`、`models` 或 `repositories` 文件，不集中堆在入口文件。
+- 翻译记录：后续由后端按用户归档，前端从 API 拉取历史记录。
 
 ## 第三方库清单
 
 运行依赖：
 
-- `@vitejs/plugin-react`：React 插件，当前使用 `^6.0.2`
-- `concurrently`：同时启动前端和后端开发服务，当前使用 `^9.2.1`
-- `cors`：后端跨域中间件，当前使用 `^2.8.5`
-- `dotenv`：读取本地 `.env` 配置文件，当前使用 `^17.2.3`
-- `express`：后端 HTTP 服务框架，当前使用 `^5.1.0`
-- `react`：前端 UI 框架，当前使用 `^19.1.1`
-- `react-dom`：React DOM 渲染入口，当前使用 `^19.1.1`
-- `ws`：Node.js WebSocket 服务库，当前使用 `^8.21.0`
-- `zustand`：前端全局状态管理库，当前使用 `^5.0.14`
+- `@vitejs/plugin-react`：Vite React 插件，当前版本 `^6.0.2`。
+- `concurrently`：同时启动前端和后端开发服务，当前版本 `^9.2.1`。
+- `cors`：Express 跨域中间件，当前版本 `^2.8.5`。
+- `dotenv`：读取 `.env` 配置，当前版本 `^17.4.2`。
+- `express`：后端 HTTP 服务框架，当前版本 `^5.1.0`。
+- `react`：前端 UI 框架，当前版本 `^19.1.1`。
+- `react-dom`：React DOM 渲染入口，当前版本 `^19.1.1`。
+- `ws`：Node.js WebSocket 服务库，当前版本 `^8.21.0`。
+- `zustand`：前端全局状态管理库，当前版本 `^5.0.14`。
 
 开发依赖：
 
-- `vite`：Vite 8，当前使用 `^8.0.16`
-- `less`：Vite 样式预处理器依赖，用于编译 `.less` 样式文件
-- `nodemon`：后端开发时自动重启，当前使用 `^3.1.10`
+- `vite`：Vite 构建工具，当前版本 `^8.0.16`。
+- `less`：Less 样式预处理器，当前版本 `^4.6.4`。
+- `nodemon`：后端开发时自动重启，当前版本 `^3.1.10`。
+
+说明：本次登录界面和主界面配色调整未新增第三方库，视觉元素均由 React 组件与 Less 实现。
 
 ## 本地启动
 
-先复制配置模板，并填写真实密钥：
+复制环境变量模板并填写真实密钥：
 
 ```bash
 copy .env.example .env
 ```
 
-`.env` 示例：
-
-```env
-AI_PROVIDER=xunfei
-PORT=3001
-
-XUNFEI_APP_ID=你的讯飞AppID
-XUNFEI_API_KEY=你的讯飞APIKey
-XUNFEI_API_SECRET=你的讯飞APISecret
-```
-
-`.env` 已加入 `.gitignore`，不要提交真实密钥。
+安装依赖：
 
 ```bash
 npm install
+```
+
+启动开发服务：
+
+```bash
 npm run dev
 ```
 
@@ -98,21 +87,25 @@ npm run dev
 - 后端健康检查：http://localhost:3001/api/health
 - 字幕 WebSocket：ws://localhost:3001/ws/subtitles
 
-前端开发服务器已代理：
+前端开发服务器代理：
 
 - `/api` -> `http://localhost:3001`
 - `/ws` -> `ws://localhost:3001`
 
-可选环境变量：
+## 环境变量
 
-- `PORT`：后端服务端口，默认 `3001`
-- `AI_PROVIDER`：后端 AI Provider，当前支持 `xunfei`，默认 `xunfei`
-- `XUNFEI_APP_ID`：讯飞开放平台应用 AppID
-- `XUNFEI_API_KEY`：讯飞语音听写 APIKey
-- `XUNFEI_API_SECRET`：讯飞语音听写 APISecret
-- `XUNFEI_IAT_URL`：讯飞语音听写 WebSocket 地址，默认 `wss://iat-api.xfyun.cn/v2/iat`
-- `XUNFEI_IAT_LANGUAGE`：识别语种，默认 `zh_cn`
-- `XUNFEI_IAT_VAD_EOS`：讯飞端点检测静音时长，默认 `5000`
+- `PORT`：后端服务端口，默认 `3001`。
+- `AI_PROVIDER`：后端 AI Provider，当前支持 `xunfei`。
+- `XUNFEI_APP_ID`：讯飞开放平台应用 AppID。
+- `XUNFEI_API_KEY`：讯飞 APIKey。
+- `XUNFEI_API_SECRET`：讯飞 APISecret。
+- `XUNFEI_IAT_URL`：讯飞语音听写 WebSocket 地址，默认 `wss://iat-api.xfyun.cn/v2/iat`。
+- `XUNFEI_IAT_LANGUAGE`：识别语种，默认 `zh_cn`。
+- `XUNFEI_IAT_VAD_EOS`：端点检测静音时长，默认 `5000`。
+- `XUNFEI_TRANSLATION_FROM`：翻译源语言，默认 `en`。
+- `XUNFEI_TRANSLATION_TO`：翻译目标语言，默认 `cn`。
+- `TRANSLATION_DEBOUNCE_MS`：翻译防抖时间。
+- `TRANSLATION_TIMEOUT_MS`：翻译请求超时时间。
 
 ## 目录结构
 
@@ -120,15 +113,10 @@ npm run dev
 .
 ├── backend
 │   ├── config
-│   │   └── aiProviderConfig.js
+│   ├── contracts
 │   ├── providers
-│   │   ├── aiTranslationProviderFactory.js
-│   │   ├── xunfeiIatAuth.js
-│   │   └── xunfeiIatTranslationProvider.js
 │   ├── routes
-│   │   └── healthRoutes.js
 │   ├── websocket
-│   │   └── subtitleSocket.js
 │   └── server.js
 ├── frontend
 │   ├── index.html
@@ -136,53 +124,17 @@ npm run dev
 │   └── src
 │       ├── App.jsx
 │       ├── components
-│       ├── main.jsx
 │       ├── services
-│       │   ├── microphoneCapture.js
-│       │   └── subtitleSocket.js
 │       ├── stores
-│       │   └── listeningStore.js
 │       └── styles
 ├── package.json
 └── README.md
 ```
 
-## PR 规则
-
-本项目严格按小粒度 PR 开发：
-
-- 每个 PR 只实现或修改一个单一功能
-- 大功能拆分成多个独立 PR 分步提交
-- 每个 PR 合并后，主分支代码必须保持可运行
-- 用户测试通过后，再确认是否提交
-
-PR 描述必须包含：
-
-- 标题：一句话说明本 PR 新增或修改了什么
-- 功能描述：说明该功能的作用与使用方式
-- 实现思路：简要说明技术选型或核心实现逻辑
-- 测试方式：说明如何验证功能正常运行
-
-## 已完成的 PR 拆分
-
-1. 初始化项目结构与启动脚本
-2. 实现前端字幕主界面
-3. 添加前端监听状态管理
-4. 添加 Mock 字幕数据源
-5. 实现前端字幕流播放
-6. 实现字幕修正展示
-7. 添加前端状态指标联动
-8. 添加后端 WebSocket 骨架
-9. 前端接入 WebSocket 字幕事件
-10. 添加麦克风采集入口
-11. 添加前端监听状态全局管理
-12. 接入 Mock AI 转写与翻译 Provider
-13. 添加 AI Provider 选择入口
-14. 完善字幕修正事件契约
-15. 接入讯飞 IAT 语音识别 Provider
-
 ## 后续计划
 
-1. 接入真实 AI 语音识别与翻译 Provider
-2. 完善字幕修正策略
-3. 增加演示模式与复现文档
+1. 接入 MongoDB，建立用户、翻译会话和字幕片段数据模型。
+2. 实现注册、登录、刷新令牌、退出登录等认证路由。
+3. 使用 Access Token + Refresh Token 的双 Token 鉴权模式。
+4. 将翻译记录从 `localStorage` 迁移到后端数据库。
+5. 补充受保护路由、请求拦截和登录态恢复。

@@ -17,7 +17,7 @@ function Sidebar() {
           <i />
           <i />
         </span>
-        <strong>AI同声传译助手</strong>
+        <strong>AI 同声传译助手</strong>
       </div>
 
       <nav className="nav-list" aria-label="功能导航">
@@ -37,9 +37,9 @@ function Sidebar() {
 
       <button className="theme-toggle" type="button">
         <span className="theme-icon" aria-hidden="true">
-          ●
+          ◐
         </span>
-        深色模式
+        明亮模式
         <span className="theme-chevron" aria-hidden="true">
           ›
         </span>
