@@ -1,3 +1,4 @@
+import { refreshAuthSession } from './authApi';
 import { getAccessToken } from './authStorage';
 
 const TRANSLATION_HISTORY_API_BASE = '/api/translation-history';
@@ -39,8 +40,22 @@ async function requestTranslationHistoryApi(path = '', { method = 'GET', body } 
   return payload;
 }
 
+async function requestTranslationHistoryApiWithRefresh(path, options) {
+  try {
+    return await requestTranslationHistoryApi(path, options);
+  } catch (error) {
+    if (error.status !== 401) {
+      throw error;
+    }
+
+    // AT 失效时用 HttpOnly Cookie 中的 RT 换新 AT，再重试一次记录请求。
+    await refreshAuthSession();
+    return requestTranslationHistoryApi(path, options);
+  }
+}
+
 export async function fetchTranslationHistory() {
-  const payload = await requestTranslationHistoryApi();
+  const payload = await requestTranslationHistoryApiWithRefresh();
   return payload.historyItems || [];
 }
 
@@ -49,7 +64,7 @@ export async function saveTranslationHistoryRecord(record) {
     return null;
   }
 
-  const payload = await requestTranslationHistoryApi('', {
+  const payload = await requestTranslationHistoryApiWithRefresh('', {
     method: 'POST',
     body: {
       sessionId: record.id,
@@ -63,7 +78,7 @@ export async function saveTranslationHistoryRecord(record) {
 }
 
 export async function clearTranslationHistoryRecords() {
-  return requestTranslationHistoryApi('', {
+  return requestTranslationHistoryApiWithRefresh('', {
     method: 'DELETE'
   });
 }
